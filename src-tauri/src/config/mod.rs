@@ -1,16 +1,37 @@
+use std::fs;
 use std::process::Command;
 use tauri::AppHandle;
+
+use crate::state::ServiceAccess;
 
 pub struct ComposeConfig {
     name: String,
 }
 
 impl ComposeConfig {
-    pub fn new(name: String, app_handle: AppHandle) -> Result<Self, &'static str> {
-        // TODO: check if a file with this name already exists
+    pub fn new(name: String, app_handle: &AppHandle) -> Result<Self, &'static str> {
+        let app_dir = app_handle
+            .path_resolver()
+            .app_data_dir()
+            .expect("The app data directory should exist.");
 
-        // let _docker_compose_file = app_dir.join(name.clone());
+        app_handle.manager_mut(|man| man.fetch_configs(app_handle));
 
+        if app_handle.manager(|man| man.configs.get(&name).is_some()) {
+            return Err("Config already exists");
+        }
+
+        let _file = fs::File::create(app_dir.join(name.clone() + ".toml"));
+
+        // TODO: Write something to the file
+
+        Ok(Self { name })
+    }
+
+    /**
+     * Reads toml file an creates a ComposeConfig
+     */
+    pub fn from_file(name: String, app_handle: AppHandle) -> Result<Self, &'static str> {
         Ok(Self { name })
     }
 

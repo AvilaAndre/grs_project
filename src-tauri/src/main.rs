@@ -17,22 +17,19 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-fn create_compose_config(name: &str, app_handle: AppHandle) -> bool {
-    match ComposeConfig::new(name.to_string(), app_handle) {
+fn create_compose_config(name: &str, app_handle: AppHandle) -> Result<Vec<String>, &'static str> {
+    match ComposeConfig::new(name.to_string(), &app_handle) {
         Ok(new_config) => {
-            println!("Created new config successfully");
-            return true;
+            app_handle.manager_mut(|man| man.configs.insert(name.to_string(), new_config));
+            return Ok(app_handle.manager(|man| man.get_configs_list()));
         }
-        Err(why) => {
-            println!("Failed to create new config. reason: {}", why);
-            return false;
-        }
+        Err(why) => return Err(why),
     }
 }
 
 #[tauri::command]
 fn get_configs(app_handle: AppHandle) -> Vec<String> {
-    app_handle.manager(|man| Vec::from_iter(man.configs.keys()).into_iter().map(|borrowed_val| borrowed_val.clone()).collect())
+    app_handle.manager(|man| man.get_configs_list())
 }
 
 fn main() {
