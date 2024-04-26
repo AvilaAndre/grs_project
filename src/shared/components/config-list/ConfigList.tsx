@@ -31,15 +31,21 @@ const ConfigList = () => {
 	})
 
 	return (
-		<>
-			<ul>
+		<div class="w-96 max-w-md">
+			<ul class="flex flex-col gap-y-2 max-h-96 overflow-y-scroll">
 				<For each={configsList()} fallback={<p>No config files found</p>}>{config =>
-					<li>{config}</li>
+					<li>
+						<button class="btn btn-neutral w-full">
+							{config}
+						</button>
+					</li>
 				}</For>
 			</ul>
-			<input type="text" placeholder="New config name" value={newConfigName()} onInput={(e) => setNewConfigName(e.target.value)} />
-			<button type="button" onClick={createNewConfig}> Create new config </button>
-		</>
+			<div class="flex flex-col gap-y-2 mt-4">
+				<input type="text" placeholder="New config name" value={newConfigName()} onInput={(e) => setNewConfigName(e.target.value)} class="input input-bordered w-full" />
+				<button class="btn btn-primary w-full" onClick={createNewConfig}>Create new config</button>
+			</div>
+		</div>
 	);
 };
 

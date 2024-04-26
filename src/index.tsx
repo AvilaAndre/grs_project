@@ -2,18 +2,17 @@
 import { render } from "solid-js/web";
 
 import "./index.css";
-import "./styles.css";
 import { A, Route, Router } from "@solidjs/router";
 import ConfigsPage from "./pages/ConfigsPage";
 import HomePage from "./pages/HomePage";
 
 const App = (props: any) => (
-	<>
-		<A href="/">
-			<h1>NetKing</h1>
+	<div class="w-screen min-h-screen grid grid-rows-[4rem_1fr] justify-center">
+		<A href="/" class="flex justify-center items-center">
+			<h1 class="text-5xl">NetKing</h1>
 		</A>
 		{props.children}
-	</>
+	</div>
 );
 
 
