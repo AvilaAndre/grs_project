@@ -4,6 +4,7 @@
 mod config;
 mod manager;
 mod state;
+mod instances;
 
 use config::ComposeConfig;
 use manager::ConfigManager;

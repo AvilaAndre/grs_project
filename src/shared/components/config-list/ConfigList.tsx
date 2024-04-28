@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api";
 import { For, createSignal, onMount } from "solid-js";
-
+import { A } from "@solidjs/router";
 
 const ConfigList = () => {
 	const [configsList, setConfigsList] = createSignal([]);
@@ -35,9 +35,9 @@ const ConfigList = () => {
 			<ul class="flex flex-col gap-y-2 max-h-96 overflow-y-scroll">
 				<For each={configsList()} fallback={<p>No config files found</p>}>{config =>
 					<li>
-						<button class="btn btn-neutral w-full">
+						<A href={"/actions/" + config} class="btn btn-neutral w-full">
 							{config}
-						</button>
+						</A>
 					</li>
 				}</For>
 			</ul>
