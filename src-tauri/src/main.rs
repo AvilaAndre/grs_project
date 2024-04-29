@@ -6,6 +6,7 @@ mod instances;
 mod manager;
 mod state;
 
+use config::network_data::NetworkData;
 use config::ComposeConfig;
 use instances::Instance;
 use instances::{client::ClientInstance, nodeapp::NodeAppInstance};
@@ -79,6 +80,24 @@ fn add_client_instance_to_config(
     })
 }
 
+#[tauri::command]
+fn add_network_to_config(
+    config_name: String,
+    network_name: String,
+    subnet: String,
+    gateway: String,
+    app_handle: AppHandle,
+) -> bool {
+    app_handle.manager_mut(|man| {
+        man.add_network_to_config(
+            config_name,
+            network_name,
+            NetworkData { subnet, gateway },
+            &app_handle,
+        )
+    })
+}
+
 fn main() {
     tauri::Builder::default()
         .manage(AppState {
@@ -89,7 +108,8 @@ fn main() {
             create_compose_config,
             get_configs,
             add_nodeapp_instance_to_config,
-            add_client_instance_to_config
+            add_client_instance_to_config,
+            add_network_to_config
         ])
         .setup(|app| {
             let handle = app.handle();

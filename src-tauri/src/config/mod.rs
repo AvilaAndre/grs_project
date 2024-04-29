@@ -1,3 +1,5 @@
+pub mod network_data;
+
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs::{self, File};
@@ -9,11 +11,14 @@ use crate::instances::client::ClientInstance;
 use crate::instances::nodeapp::NodeAppInstance;
 use crate::state::ServiceAccess;
 
+use self::network_data::NetworkData;
+
 #[derive(Debug, Deserialize)]
 pub struct ComposeConfig {
     pub name: String,
     pub node_apps: Option<HashMap<String, NodeAppInstance>>,
     pub clients: Option<HashMap<String, ClientInstance>>,
+    pub networks: Option<HashMap<String, NetworkData>>,
 }
 
 impl ComposeConfig {
@@ -35,6 +40,7 @@ impl ComposeConfig {
             name,
             node_apps: None,
             clients: None,
+            networks: None,
         };
 
         let _ = instance.write(app_handle);
@@ -139,6 +145,22 @@ impl ComposeConfig {
                     let _ = f
                         .write(format!("replicas = {}\n", instance.1.replicas.unwrap()).as_bytes());
                 }
+            }
+        }
+        
+        let _ = f.write("\n".as_bytes());
+
+        // write networks
+        if self.networks.is_some() {
+            for instance in self.networks.as_ref().unwrap() {
+                // header
+                let _ = f.write(format!("[networks.\"{}\"]\n", instance.0).as_bytes());
+
+                // subnet
+                let _ = f.write(format!("subnet = \"{}\"\n", instance.1.subnet).as_bytes());
+
+                // gateway
+                let _ = f.write(format!("gateway = \"{}\"\n", instance.1.gateway).as_bytes());
             }
         }
 

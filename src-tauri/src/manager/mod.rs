@@ -1,4 +1,7 @@
-use crate::{config::ComposeConfig, instances::Instance};
+use crate::{
+    config::{network_data::NetworkData, ComposeConfig},
+    instances::Instance,
+};
 use std::{collections::HashMap, fs};
 use tauri::AppHandle;
 
@@ -79,6 +82,7 @@ impl ConfigManager {
             None => return false,
         };
 
+        // TODO: Check if already exists
         match instance {
             Instance::NodeApp(app) => {
                 if config.node_apps.is_none() {
@@ -101,6 +105,33 @@ impl ConfigManager {
                     .insert(instance_name, client);
             }
         }
+
+        let _ = config.write(app_handle);
+
+        true
+    }
+
+    pub fn add_network_to_config(
+        &mut self,
+        config_name: String,
+        network_name: String,
+        network: NetworkData,
+        app_handle: &AppHandle,
+    ) -> bool {
+        let config: &mut ComposeConfig = match self.configs.get_mut(&config_name) {
+            Some(c) => c,
+            None => return false,
+        };
+
+        // TODO: Check if already exists
+        if config.networks.is_none() {
+            config.networks = Some(HashMap::new());
+        }
+        config
+            .networks
+            .as_mut()
+            .unwrap()
+            .insert(network_name, network);
 
         let _ = config.write(app_handle);
 
