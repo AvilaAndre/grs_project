@@ -5,13 +5,15 @@ use std::io::Write;
 use std::process::Command;
 use tauri::AppHandle;
 
+use crate::instances::client::ClientInstance;
 use crate::instances::nodeapp::NodeAppInstance;
 use crate::state::ServiceAccess;
 
 #[derive(Debug, Deserialize)]
 pub struct ComposeConfig {
     pub name: String,
-    pub node_apps: HashMap<String, NodeAppInstance>,
+    pub node_apps: Option<HashMap<String, NodeAppInstance>>,
+    pub clients: Option<HashMap<String, ClientInstance>>,
 }
 
 impl ComposeConfig {
@@ -31,7 +33,8 @@ impl ComposeConfig {
 
         let instance = Self {
             name,
-            node_apps: HashMap::new(),
+            node_apps: None,
+            clients: None,
         };
 
         let _ = instance.write(app_handle);
@@ -81,30 +84,61 @@ impl ComposeConfig {
         let _ = f.write(format!("name = \"{}\"\n\n", self.name).as_bytes());
 
         // write node apps
-        for instance in &self.node_apps {
-            // header
-            let _ = f.write(format!("[node_apps.\"{}\"]\n", instance.0).as_bytes());
+        if self.node_apps.is_some() {
+            for instance in self.node_apps.as_ref().unwrap() {
+                // header
+                let _ = f.write(format!("[node_apps.\"{}\"]\n", instance.0).as_bytes());
 
-            // networks
-            let _ = f.write("networks = [".as_bytes());
-            let mut first: bool = true;
-            for network in &instance.1.networks {
-                if first {
-                    first = false;
-                } else {
-                    let _ = f.write(", ".as_bytes());
+                // networks
+                let _ = f.write("networks = [".as_bytes());
+                let mut first: bool = true;
+                for network in &instance.1.networks {
+                    if first {
+                        first = false;
+                    } else {
+                        let _ = f.write(", ".as_bytes());
+                    }
+                    let _ = f.write(format!("\"{}\"", network).as_bytes());
                 }
-                let _ = f.write(format!("\"{}\"", network).as_bytes());
+                let _ = f.write("]\n".as_bytes());
+
+                // port
+                let _ = f.write(format!("port = {}\n", instance.1.port).as_bytes());
+
+                // replicas
+                if instance.1.replicas.is_some() {
+                    let _ = f
+                        .write(format!("replicas = {}\n", instance.1.replicas.unwrap()).as_bytes());
+                }
             }
-            let _ = f.write("]\n".as_bytes());
+        }
 
-            // port
-            let _ = f.write(format!("port = {}\n", instance.1.port).as_bytes());
+        let _ = f.write("\n".as_bytes());
 
-            // replicas
-            if instance.1.replicas.is_some() {
-                let _ =
-                    f.write(format!("replicas = {}\n", instance.1.replicas.unwrap()).as_bytes());
+        // write clients
+        if self.clients.is_some() {
+            for instance in self.clients.as_ref().unwrap() {
+                // header
+                let _ = f.write(format!("[clients.\"{}\"]\n", instance.0).as_bytes());
+
+                // networks
+                let _ = f.write("networks = [".as_bytes());
+                let mut first: bool = true;
+                for network in &instance.1.networks {
+                    if first {
+                        first = false;
+                    } else {
+                        let _ = f.write(", ".as_bytes());
+                    }
+                    let _ = f.write(format!("\"{}\"", network).as_bytes());
+                }
+                let _ = f.write("]\n".as_bytes());
+
+                // replicas
+                if instance.1.replicas.is_some() {
+                    let _ = f
+                        .write(format!("replicas = {}\n", instance.1.replicas.unwrap()).as_bytes());
+                }
             }
         }
 

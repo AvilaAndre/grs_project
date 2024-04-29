@@ -81,7 +81,24 @@ impl ConfigManager {
 
         match instance {
             Instance::NodeApp(app) => {
-                config.node_apps.insert(instance_name, app);
+                if config.node_apps.is_none() {
+                    config.node_apps = Some(HashMap::new())
+                }
+                config
+                    .node_apps
+                    .as_mut()
+                    .unwrap()
+                    .insert(instance_name, app);
+            }
+            Instance::Client(client) => {
+                if config.clients.is_none() {
+                    config.clients = Some(HashMap::new())
+                }
+                config
+                    .clients
+                    .as_mut()
+                    .unwrap()
+                    .insert(instance_name, client);
             }
         }
 

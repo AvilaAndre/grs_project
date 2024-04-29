@@ -7,8 +7,8 @@ mod manager;
 mod state;
 
 use config::ComposeConfig;
-use instances::nodeapp::NodeAppInstance;
 use instances::Instance;
+use instances::{client::ClientInstance, nodeapp::NodeAppInstance};
 use manager::ConfigManager;
 use state::{AppState, ServiceAccess};
 use tauri::{AppHandle, Manager, State};
@@ -53,7 +53,28 @@ fn add_nodeapp_instance_to_config(
                 port,
                 replicas: if replicas <= 1 { None } else { Some(replicas) },
             }),
-            &app_handle
+            &app_handle,
+        )
+    })
+}
+
+#[tauri::command]
+fn add_client_instance_to_config(
+    config_name: String,
+    instance_name: String,
+    networks: Vec<String>,
+    replicas: u8,
+    app_handle: AppHandle,
+) -> bool {
+    app_handle.manager_mut(|man| {
+        man.add_instance_to_config(
+            config_name,
+            instance_name,
+            Instance::Client(ClientInstance {
+                networks,
+                replicas: if replicas <= 1 { None } else { Some(replicas) },
+            }),
+            &app_handle,
         )
     })
 }
@@ -67,7 +88,8 @@ fn main() {
             greet,
             create_compose_config,
             get_configs,
-            add_nodeapp_instance_to_config
+            add_nodeapp_instance_to_config,
+            add_client_instance_to_config
         ])
         .setup(|app| {
             let handle = app.handle();

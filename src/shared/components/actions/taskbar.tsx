@@ -1,5 +1,6 @@
 import { Show, createSignal } from "solid-js"
 import AddNodeAppModal from "./add-modals/add-node-app";
+import AddClientModal from "./add-modals/add-client";
 
 export default function TaskBar(props: any) {
 	const [instanceOption, setInstanceOption] = createSignal("");
@@ -41,6 +42,9 @@ export default function TaskBar(props: any) {
 					</label>
 					<Show when={instanceOption() == "node-app"} >
 						<AddNodeAppModal config_name={config_name} />
+					</Show>
+					<Show when={instanceOption() == "client"} >
+						<AddClientModal config_name={config_name} />
 					</Show>
 				</div>
 				<form method="dialog" class="modal-backdrop">
