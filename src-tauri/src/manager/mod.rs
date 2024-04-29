@@ -49,7 +49,7 @@ impl ConfigManager {
                                 configs.insert(name, compose_config.unwrap());
                             } else {
                                 // TODO: Remove this line
-                                println!("{:?}", compose_config.err().unwrap())
+                                println!("Failed to load config: {:?}", compose_config.err().unwrap())
                             }
                         }
                     }
@@ -82,7 +82,6 @@ impl ConfigManager {
             None => return Err("Failed to find the configuration.".to_string()),
         };
 
-        // TODO: Check if already exists
         match instance {
             Instance::NodeApp(app) => {
                 if config.node_apps.is_none() {
@@ -138,15 +137,22 @@ impl ConfigManager {
         network_name: String,
         network: NetworkData,
         app_handle: &AppHandle,
-    ) -> bool {
+    ) -> Result<bool, String> {
         let config: &mut ComposeConfig = match self.configs.get_mut(&config_name) {
             Some(c) => c,
-            None => return false,
+            None => return Err("Failed to find the configuration.".to_string()),
         };
 
-        // TODO: Check if already exists
         if config.networks.is_none() {
             config.networks = Some(HashMap::new());
+        }
+        if config
+            .networks
+            .as_mut()
+            .unwrap()
+            .contains_key(&network_name)
+        {
+            return Err(format!("Network with name {} already exists.", network_name).to_string());
         }
         config
             .networks
@@ -156,6 +162,6 @@ impl ConfigManager {
 
         let _ = config.write(app_handle);
 
-        true
+        Ok(true)
     }
 }
