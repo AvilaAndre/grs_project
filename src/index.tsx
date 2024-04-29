@@ -6,6 +6,8 @@ import { A, Route, Router } from "@solidjs/router";
 import ConfigsPage from "./pages/ConfigsPage";
 import HomePage from "./pages/HomePage";
 import ActionsPage from "./pages/ActionsPage";
+import { Toaster } from "solid-toast";
+
 
 const App = (props: any) => (
 	<div class="w-screen min-h-screen grid grid-rows-[1fr] justify-center">
@@ -13,6 +15,7 @@ const App = (props: any) => (
 			<h1 class="text-xl">NetKing</h1>
 		</A>
 		{props.children}
+		<Toaster position="top-center" />
 	</div>
 );
 

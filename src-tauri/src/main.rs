@@ -33,6 +33,7 @@ fn create_compose_config(name: &str, app_handle: AppHandle) -> Result<Vec<String
 
 #[tauri::command]
 fn get_configs(app_handle: AppHandle) -> Vec<String> {
+    app_handle.manager_mut(|man| man.fetch_configs(&app_handle));
     app_handle.manager(|man| man.get_configs_list())
 }
 
@@ -44,7 +45,7 @@ fn add_nodeapp_instance_to_config(
     port: u16,
     replicas: u8,
     app_handle: AppHandle,
-) -> bool {
+) -> Result<bool, String> {
     app_handle.manager_mut(|man| {
         man.add_instance_to_config(
             config_name,
@@ -66,7 +67,7 @@ fn add_client_instance_to_config(
     networks: Vec<String>,
     replicas: u8,
     app_handle: AppHandle,
-) -> bool {
+) -> Result<bool, String> {
     app_handle.manager_mut(|man| {
         man.add_instance_to_config(
             config_name,

@@ -1,7 +1,6 @@
 import TaskBar from "../shared/components/actions/taskbar"
 
 export default function ActionsPage(props: any) {
-
 	const config_name = props.params.id
 
 	return (

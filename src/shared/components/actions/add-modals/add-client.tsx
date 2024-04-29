@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api";
 import { createSignal } from "solid-js";
+import toast from "solid-toast";
 
 export default function AddClientModal(props: any) {
 	const [name, setName] = createSignal("");
@@ -14,6 +15,18 @@ export default function AddClientModal(props: any) {
 			instanceName: name(),
 			networks: networks(),
 			replicas: replicas()
+		}).then((add) => {
+			if (!add) toast.error(name() + " Client instance could not be created.")
+			else {
+				toast.success(name() + " Client instance created.")
+
+				//reset
+				setName("");
+				setReplicas(1);
+				setNetworks([]);
+			}
+		}).catch((error) => {
+			toast.error(error)
 		});
 	}
 
@@ -24,6 +37,8 @@ export default function AddClientModal(props: any) {
 				<input type="text" value={name()} onChange={(e: Event) => {
 					// @ts-ignore
 					let val = e?.target?.value
+					val = val.trim()
+					val = val.replace(' ', '')
 
 					if (val)
 						setName(val)

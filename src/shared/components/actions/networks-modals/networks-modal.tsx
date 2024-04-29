@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api";
 import { createSignal } from "solid-js";
+import toast from "solid-toast";
 
 export default function NetworksModal(props: any) {
 	const [name, setName] = createSignal("");
@@ -14,6 +15,18 @@ export default function NetworksModal(props: any) {
 			networkName: name(),
 			subnet: subnet(),
 			gateway: gateway(),
+		}).then((add) => {
+			if (!add) toast.error(name() + " network could not be created.")
+			else {
+				toast.success(name() + " network created.")
+
+				//reset
+				setName("");
+				setSubnet("");
+				setGateway("");
+			}
+		}).catch((error) => {
+			toast.error(error)
 		});
 	}
 
@@ -31,6 +44,8 @@ export default function NetworksModal(props: any) {
 						<input type="text" value={name()} onChange={(e: Event) => {
 							// @ts-ignore
 							let val = e?.target?.value
+							val = val.trim()
+							val = val.replace(' ', '')
 
 							if (val)
 								setName(val)

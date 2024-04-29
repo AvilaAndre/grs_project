@@ -76,10 +76,10 @@ impl ConfigManager {
         instance_name: String,
         instance: Instance,
         app_handle: &AppHandle,
-    ) -> bool {
+    ) -> Result<bool, String> {
         let config: &mut ComposeConfig = match self.configs.get_mut(&config_name) {
             Some(c) => c,
-            None => return false,
+            None => return Err("Failed to find the configuration.".to_string()),
         };
 
         // TODO: Check if already exists
@@ -87,6 +87,17 @@ impl ConfigManager {
             Instance::NodeApp(app) => {
                 if config.node_apps.is_none() {
                     config.node_apps = Some(HashMap::new())
+                }
+
+                if config
+                    .node_apps
+                    .as_mut()
+                    .unwrap()
+                    .contains_key(&instance_name)
+                {
+                    return Err(
+                        format!("Node App with name {} already exists.", instance_name).to_string(),
+                    );
                 }
                 config
                     .node_apps
@@ -98,6 +109,16 @@ impl ConfigManager {
                 if config.clients.is_none() {
                     config.clients = Some(HashMap::new())
                 }
+                if config
+                    .clients
+                    .as_mut()
+                    .unwrap()
+                    .contains_key(&instance_name)
+                {
+                    return Err(
+                        format!("Client with name {} already exists.", instance_name).to_string(),
+                    );
+                }
                 config
                     .clients
                     .as_mut()
@@ -108,7 +129,7 @@ impl ConfigManager {
 
         let _ = config.write(app_handle);
 
-        true
+        Ok(true)
     }
 
     pub fn add_network_to_config(
