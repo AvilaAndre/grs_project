@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::fs;
+use std::fs::{self, File};
+use std::io::Write;
 use std::process::Command;
 use tauri::AppHandle;
 
@@ -28,12 +29,14 @@ impl ComposeConfig {
 
         let _file = fs::File::create(app_dir.join(name.clone() + ".toml"));
 
-        // TODO: Write something to the file
-
-        Ok(Self {
+        let instance = Self {
             name,
             node_apps: HashMap::new(),
-        })
+        };
+
+        let _ = instance.write(app_handle);
+
+        Ok(instance)
     }
 
     /**
@@ -61,6 +64,51 @@ impl ComposeConfig {
         };
 
         Ok(config)
+    }
+
+    pub fn write(&self, app_handle: &AppHandle) -> Result<bool, &str> {
+        let app_dir = app_handle
+            .path_resolver()
+            .app_data_dir()
+            .expect("The app data directory should exist.");
+
+        let mut f = match File::create(app_dir.join(self.name.clone() + ".toml")) {
+            Ok(f) => f,
+            Err(_) => return Err("Couldn't create file to write"),
+        };
+
+        // write name
+        let _ = f.write(format!("name = \"{}\"\n\n", self.name).as_bytes());
+
+        // write node apps
+        for instance in &self.node_apps {
+            // header
+            let _ = f.write(format!("[node_apps.\"{}\"]\n", instance.0).as_bytes());
+
+            // networks
+            let _ = f.write("networks = [".as_bytes());
+            let mut first: bool = true;
+            for network in &instance.1.networks {
+                if first {
+                    first = false;
+                } else {
+                    let _ = f.write(", ".as_bytes());
+                }
+                let _ = f.write(format!("\"{}\"", network).as_bytes());
+            }
+            let _ = f.write("]\n".as_bytes());
+
+            // port
+            let _ = f.write(format!("port = {}\n", instance.1.port).as_bytes());
+
+            // replicas
+            if instance.1.replicas.is_some() {
+                let _ =
+                    f.write(format!("replicas = {}\n", instance.1.replicas.unwrap()).as_bytes());
+            }
+        }
+
+        Ok(true)
     }
 
     pub fn up(&self) -> bool {

@@ -2,11 +2,13 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod config;
+mod instances;
 mod manager;
 mod state;
-mod instances;
 
 use config::ComposeConfig;
+use instances::nodeapp::NodeAppInstance;
+use instances::Instance;
 use manager::ConfigManager;
 use state::{AppState, ServiceAccess};
 use tauri::{AppHandle, Manager, State};
@@ -33,6 +35,29 @@ fn get_configs(app_handle: AppHandle) -> Vec<String> {
     app_handle.manager(|man| man.get_configs_list())
 }
 
+#[tauri::command]
+fn add_nodeapp_instance_to_config(
+    config_name: String,
+    instance_name: String,
+    networks: Vec<String>,
+    port: u16,
+    replicas: u8,
+    app_handle: AppHandle,
+) -> bool {
+    app_handle.manager_mut(|man| {
+        man.add_instance_to_config(
+            config_name,
+            instance_name,
+            Instance::NodeApp(NodeAppInstance {
+                networks,
+                port,
+                replicas: if replicas <= 1 { None } else { Some(replicas) },
+            }),
+            &app_handle
+        )
+    })
+}
+
 fn main() {
     tauri::Builder::default()
         .manage(AppState {
@@ -41,7 +66,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             greet,
             create_compose_config,
-            get_configs
+            get_configs,
+            add_nodeapp_instance_to_config
         ])
         .setup(|app| {
             let handle = app.handle();

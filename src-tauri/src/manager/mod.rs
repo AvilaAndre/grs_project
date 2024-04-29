@@ -1,4 +1,4 @@
-use crate::config::ComposeConfig;
+use crate::{config::ComposeConfig, instances::Instance};
 use std::{collections::HashMap, fs};
 use tauri::AppHandle;
 
@@ -44,7 +44,8 @@ impl ConfigManager {
                                 ComposeConfig::from_file(name.clone(), app_handle.clone());
                             if compose_config.is_ok() {
                                 configs.insert(name, compose_config.unwrap());
-                            } else { // TODO: Remove this line
+                            } else {
+                                // TODO: Remove this line
                                 println!("{:?}", compose_config.err().unwrap())
                             }
                         }
@@ -64,5 +65,28 @@ impl ConfigManager {
             .into_iter()
             .map(|borrowed_val| borrowed_val.clone())
             .collect()
+    }
+
+    pub fn add_instance_to_config(
+        &mut self,
+        config_name: String,
+        instance_name: String,
+        instance: Instance,
+        app_handle: &AppHandle,
+    ) -> bool {
+        let config: &mut ComposeConfig = match self.configs.get_mut(&config_name) {
+            Some(c) => c,
+            None => return false,
+        };
+
+        match instance {
+            Instance::NodeApp(app) => {
+                config.node_apps.insert(instance_name, app);
+            }
+        }
+
+        let _ = config.write(app_handle);
+
+        true
     }
 }
