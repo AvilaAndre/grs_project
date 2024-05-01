@@ -88,7 +88,7 @@ fn add_network_to_config(
     subnet: String,
     gateway: String,
     app_handle: AppHandle,
-) -> bool {
+) -> Result<bool, String> {
     app_handle.manager_mut(|man| {
         man.add_network_to_config(
             config_name,
