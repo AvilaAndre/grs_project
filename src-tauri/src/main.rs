@@ -99,6 +99,14 @@ fn add_network_to_config(
     })
 }
 
+#[tauri::command]
+fn get_instances(
+    config_name: String,
+    app_handle: AppHandle,
+) -> Result<Vec<(String, String)>, String> {
+    app_handle.manager_mut(|man| man.get_instances_list(config_name))
+}
+
 fn main() {
     tauri::Builder::default()
         .manage(AppState {
@@ -110,7 +118,8 @@ fn main() {
             get_configs,
             add_nodeapp_instance_to_config,
             add_client_instance_to_config,
-            add_network_to_config
+            add_network_to_config,
+            get_instances
         ])
         .setup(|app| {
             let handle = app.handle();
