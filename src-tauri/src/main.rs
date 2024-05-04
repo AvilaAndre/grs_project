@@ -5,6 +5,7 @@ mod config;
 mod instances;
 mod manager;
 mod state;
+mod utils;
 
 use config::network_data::NetworkData;
 use config::ComposeConfig;

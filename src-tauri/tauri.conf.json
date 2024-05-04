@@ -29,6 +29,9 @@
     },
     "bundle": {
       "active": true,
+	  "resources": [
+		  "resources/*"
+	  ],
       "targets": "all",
       "identifier": "com.tauri.dev",
       "icon": [

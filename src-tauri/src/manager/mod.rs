@@ -1,6 +1,7 @@
 use crate::{
     config::{network_data::NetworkData, ComposeConfig},
     instances::Instance,
+    utils::copy_dir_all,
 };
 use std::{collections::HashMap, fs};
 use tauri::AppHandle;
@@ -14,6 +15,18 @@ impl ConfigManager {
         let mut instance = Self {
             configs: HashMap::new(),
         };
+
+        // create folder for the images
+        let app_dir = app_handle
+            .path_resolver()
+            .app_data_dir()
+            .expect("The app data directory should exist.");
+
+        let images_dir = app_dir.join("images");
+        let _ = fs::create_dir_all(images_dir.clone());
+
+        // copy app folders
+        let _ = copy_dir_all("resources", images_dir);
 
         instance.fetch_configs(app_handle);
 
@@ -180,10 +193,11 @@ impl ConfigManager {
         };
 
         if config.node_apps.is_some() {
-            let node_apps: Vec<(String, String)> = Vec::from_iter(config.node_apps.as_mut().unwrap().keys())
-                .into_iter()
-                .map(|borrowed_val| (borrowed_val.clone(), "Node App".to_string()))
-                .collect();
+            let node_apps: Vec<(String, String)> =
+                Vec::from_iter(config.node_apps.as_mut().unwrap().keys())
+                    .into_iter()
+                    .map(|borrowed_val| (borrowed_val.clone(), "Node App".to_string()))
+                    .collect();
 
             for inst in node_apps {
                 instances.push(inst);
@@ -191,10 +205,11 @@ impl ConfigManager {
         }
 
         if config.clients.is_some() {
-            let client_instances: Vec<(String, String)> = Vec::from_iter(config.clients.as_mut().unwrap().keys())
-                .into_iter()
-                .map(|borrowed_val| (borrowed_val.clone(), "Client".to_string()))
-                .collect();
+            let client_instances: Vec<(String, String)> =
+                Vec::from_iter(config.clients.as_mut().unwrap().keys())
+                    .into_iter()
+                    .map(|borrowed_val| (borrowed_val.clone(), "Client".to_string()))
+                    .collect();
 
             for inst in client_instances {
                 instances.push(inst);
@@ -216,10 +231,16 @@ impl ConfigManager {
         };
 
         if config.node_apps.is_some() {
-            let node_apps: Vec<(String, Instance)> = Vec::from_iter(config.node_apps.as_ref().unwrap())
-                .into_iter()
-                .map(|borrowed_val| (borrowed_val.0.clone(), Instance::NodeApp(borrowed_val.1.clone())))
-                .collect();
+            let node_apps: Vec<(String, Instance)> =
+                Vec::from_iter(config.node_apps.as_ref().unwrap())
+                    .into_iter()
+                    .map(|borrowed_val| {
+                        (
+                            borrowed_val.0.clone(),
+                            Instance::NodeApp(borrowed_val.1.clone()),
+                        )
+                    })
+                    .collect();
 
             for inst in node_apps {
                 instances.push(inst);
@@ -227,10 +248,16 @@ impl ConfigManager {
         }
 
         if config.clients.is_some() {
-            let client_instances: Vec<(String, Instance)> = Vec::from_iter(config.clients.as_ref().unwrap())
-                .into_iter()
-                .map(|borrowed_val| (borrowed_val.0.clone(), Instance::Client(borrowed_val.1.clone())))
-                .collect();
+            let client_instances: Vec<(String, Instance)> =
+                Vec::from_iter(config.clients.as_ref().unwrap())
+                    .into_iter()
+                    .map(|borrowed_val| {
+                        (
+                            borrowed_val.0.clone(),
+                            Instance::Client(borrowed_val.1.clone()),
+                        )
+                    })
+                    .collect();
 
             for inst in client_instances {
                 instances.push(inst);
