@@ -5,7 +5,7 @@ use serde::Serialize;
 
 use self::{client::ClientInstance, nodeapp::NodeAppInstance};
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub enum Instance {
     NodeApp(NodeAppInstance),
     Client(ClientInstance),

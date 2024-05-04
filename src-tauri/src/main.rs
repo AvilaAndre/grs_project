@@ -100,10 +100,18 @@ fn add_network_to_config(
 }
 
 #[tauri::command]
-fn get_instances(
+fn get_instances_names(
     config_name: String,
     app_handle: AppHandle,
 ) -> Result<Vec<(String, String)>, String> {
+    app_handle.manager_mut(|man| man.get_instances_name_list(config_name))
+}
+
+#[tauri::command]
+fn get_instances(
+    config_name: String,
+    app_handle: AppHandle,
+) -> Result<Vec<(String, Instance)>, String> {
     app_handle.manager_mut(|man| man.get_instances_list(config_name))
 }
 
@@ -119,6 +127,7 @@ fn main() {
             add_nodeapp_instance_to_config,
             add_client_instance_to_config,
             add_network_to_config,
+            get_instances_names,
             get_instances
         ])
         .setup(|app| {

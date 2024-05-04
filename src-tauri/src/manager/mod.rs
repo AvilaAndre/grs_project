@@ -168,7 +168,7 @@ impl ConfigManager {
         Ok(true)
     }
 
-    pub fn get_instances_list(
+    pub fn get_instances_name_list(
         &mut self,
         config_name: String,
     ) -> Result<Vec<(String, String)>, String> {
@@ -194,6 +194,42 @@ impl ConfigManager {
             let client_instances: Vec<(String, String)> = Vec::from_iter(config.clients.as_mut().unwrap().keys())
                 .into_iter()
                 .map(|borrowed_val| (borrowed_val.clone(), "Client".to_string()))
+                .collect();
+
+            for inst in client_instances {
+                instances.push(inst);
+            }
+        }
+
+        Ok(instances)
+    }
+
+    pub fn get_instances_list(
+        &mut self,
+        config_name: String,
+    ) -> Result<Vec<(String, Instance)>, String> {
+        let mut instances: Vec<(String, Instance)> = Vec::new();
+
+        let config: &mut ComposeConfig = match self.configs.get_mut(&config_name) {
+            Some(c) => c,
+            None => return Err("Failed to find the configuration.".to_string()),
+        };
+
+        if config.node_apps.is_some() {
+            let node_apps: Vec<(String, Instance)> = Vec::from_iter(config.node_apps.as_ref().unwrap())
+                .into_iter()
+                .map(|borrowed_val| (borrowed_val.0.clone(), Instance::NodeApp(borrowed_val.1.clone())))
+                .collect();
+
+            for inst in node_apps {
+                instances.push(inst);
+            }
+        }
+
+        if config.clients.is_some() {
+            let client_instances: Vec<(String, Instance)> = Vec::from_iter(config.clients.as_ref().unwrap())
+                .into_iter()
+                .map(|borrowed_val| (borrowed_val.0.clone(), Instance::Client(borrowed_val.1.clone())))
                 .collect();
 
             for inst in client_instances {

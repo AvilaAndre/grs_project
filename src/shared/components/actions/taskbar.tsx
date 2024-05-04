@@ -7,7 +7,7 @@ export default function TaskBar(props: any) {
 
 	return (
 		<>
-			<div class="absolute top-1/2 left-0 transform -translate-y-1/2 ml-2 join join-vertical">
+			<div class="absolute top-1/2 left-0 transform -translate-y-1/2 ml-4 join join-vertical">
 				<button class="btn btn-primary btn-square join-item" onClick="instances_modal.showModal()">
 					<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z" /></svg>
 				</button>
