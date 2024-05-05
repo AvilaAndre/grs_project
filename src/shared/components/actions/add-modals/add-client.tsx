@@ -58,7 +58,7 @@ export default function AddClientModal(props: any) {
 			</label>
 			<div class="modal-action">
 				<form method="dialog" onSubmit={addNewClient}>
-					<button class="btn">Add Client</button>
+					<button class="btn">Add Instance</button>
 				</form>
 			</div>
 		</div>

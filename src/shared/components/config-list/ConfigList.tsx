@@ -8,7 +8,6 @@ const ConfigList = () => {
 	const [newConfigName, setNewConfigName] = createSignal("");
 
 	async function getConfigsList() {
-		// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 		setConfigsList(await invoke("get_configs", {}));
 	}
 

@@ -73,7 +73,7 @@ export default function AddNodeAppModal(props: any) {
 			</label>
 			<div class="modal-action">
 				<form method="dialog" onSubmit={addNewNode}>
-					<button class="btn">Add Node App</button>
+					<button class="btn">Add Instance</button>
 				</form>
 			</div>
 		</div>

@@ -7,7 +7,7 @@ export default function InstanceOptionsBar(props: any) {
 	const { selectedInstance } = instanceManager;
 
 	return (
-		<div class="absolute right-0 w-72 h-screen p-4 flex flex-col justify-start">
+		<div class="absolute right-0 w-80 h-screen p-4 flex flex-col justify-start">
 			<Show when={!(selectedInstance().empty)} >
 				<InstanceInfoCard config_name={config_name} instance={selectedInstance()} />
 			</Show>
