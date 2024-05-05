@@ -162,19 +162,12 @@ impl ComposeConfig {
 
 		// -------------------- Matilde ----------------------
 
-        let mut dock_file = match File::create(app_dir.join("test.yml")) {
+        let dock_file = match File::create(app_dir.join("test.yml")) {
             Ok(f) => f,
             Err(_) => return Err("Couldn't create file to write"),
         };
 
-		let _ = dock_file.write_all(("version: \"3\"\nservices:\n").as_bytes());
-
-		let _ = docker::write_node_app_instance(self.node_apps.clone(), &dock_file, 4);
-		let _ = docker::write_client_instance(self.clients.clone(), &dock_file, 4);
-		
-		let _ = dock_file.write_all(("networks:\n").as_bytes());
-
-		let _ = docker::write_network_data(self.networks.clone(), &dock_file, 4);		
+		let _ = docker::write_docker_compose(&dock_file, self);
 
 		// ---------------------------------------------------
 
