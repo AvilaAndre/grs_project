@@ -41,7 +41,7 @@ pub fn write_node_app_instance(networks_map: Option<HashMap<String, NodeAppInsta
 					name = key,
 					image = key, // FIXME TODO mudar isto para o path da image
 					port = value.port,
-					replicas = value.replicas.unwrap_or(0),
+					replicas = value.replicas.unwrap_or(1),
 					networks = networks_string // TODO verificar se isto funciona depois de implementar o resto
 				);
 
@@ -72,7 +72,7 @@ pub fn write_client_instance(clients_map: Option<HashMap<String, ClientInstance>
                     indent = " ".repeat(indentation),
 					key = key,
 					image = key, // FIXME TODO mudar isto para o path da image
-					replicas = value.replicas.unwrap_or(0),
+					replicas = value.replicas.unwrap_or(1),
 					network_name = key, // TODO mudar o nome da network
 					network_address = value.network // TODO garantir que isto funciona com valores verdadeiros
 				);
