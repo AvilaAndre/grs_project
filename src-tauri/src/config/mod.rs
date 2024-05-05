@@ -130,15 +130,9 @@ impl ComposeConfig {
 
                 // networks
                 let _ = f.write("networks = [".as_bytes());
-                let mut first: bool = true;
-                for network in &instance.1.networks {
-                    if first {
-                        first = false;
-                    } else {
-                        let _ = f.write(", ".as_bytes());
-                    }
-                    let _ = f.write(format!("\"{}\"", network).as_bytes());
-                }
+
+				let _ = f.write(format!("\"{}\"", instance.1.network).as_bytes());
+
                 let _ = f.write("]\n".as_bytes());
 
                 // replicas
@@ -168,12 +162,19 @@ impl ComposeConfig {
 
 		// -------------------- Matilde ----------------------
 
-        let dock_file = match File::create(("test.yml")) {
+        let mut dock_file = match File::create(app_dir.join("test.yml")) {
             Ok(f) => f,
             Err(_) => return Err("Couldn't create file to write"),
         };
 
+		let _ = dock_file.write_all(("version: \"3\"\nservices:\n").as_bytes());
+
 		let _ = docker::write_node_app_instance(self.node_apps.clone(), &dock_file, 4);
+		let _ = docker::write_client_instance(self.clients.clone(), &dock_file, 4);
+		
+		let _ = dock_file.write_all(("networks:\n").as_bytes());
+
+		let _ = docker::write_network_data(self.networks.clone(), &dock_file, 4);		
 
 		// ---------------------------------------------------
 

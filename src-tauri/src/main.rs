@@ -65,7 +65,7 @@ fn add_nodeapp_instance_to_config(
 fn add_client_instance_to_config(
     config_name: String,
     instance_name: String,
-    networks: Vec<String>,
+    network: String,
     replicas: u8,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
@@ -74,7 +74,7 @@ fn add_client_instance_to_config(
             config_name,
             instance_name,
             Instance::Client(ClientInstance {
-                networks,
+                network,
                 replicas: if replicas <= 1 { None } else { Some(replicas) },
             }),
             &app_handle,
