@@ -1,0 +1,24 @@
+    mygod:
+      build: mygod
+      environment:
+        - PORT=5422
+      deploy:
+        replicas: 0
+      networks:
+        - 
+    mimi:
+      build: mimi
+      environment:
+        - PORT=3000
+      deploy:
+        replicas: 2
+      networks:
+        - 
+    aaaaa:
+      build: aaaaa
+      environment:
+        - PORT=2020
+      deploy:
+        replicas: 0
+      networks:
+        - 

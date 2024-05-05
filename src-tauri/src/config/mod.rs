@@ -173,7 +173,7 @@ impl ComposeConfig {
             Err(_) => return Err("Couldn't create file to write"),
         };
 
-		let _ = docker::write_node_app_instance(self.node_apps.clone(), &dock_file, 0);
+		let _ = docker::write_node_app_instance(self.node_apps.clone(), &dock_file, 4);
 
 		// ---------------------------------------------------
 

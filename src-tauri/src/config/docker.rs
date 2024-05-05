@@ -14,14 +14,8 @@ pub fn write_node_app_instance(networks_map: Option<HashMap<String, NodeAppInsta
 				let networks_string = format!("- {}", value.networks.join("\n- "));
 
 				let item = format!(
-				   "{name}:
-					 build: {image}
-					  environment:
-					   - PORT={port}
-					  deploy:
-					   replicas: {replicas}
-					  networks:
-					   {networks}",
+                    "{indent}{name}:\n{indent}  build: {image}\n{indent}  environment:\n{indent}    - PORT={port}\n{indent}  deploy:\n{indent}    replicas: {replicas}\n{indent}  networks:\n{indent}    {networks}\n",
+                    indent = " ".repeat(indentation),
 					name = key,
 					image = key, // FIXME TODO mudar isto para o path da image
 					port = value.port,
@@ -30,7 +24,7 @@ pub fn write_node_app_instance(networks_map: Option<HashMap<String, NodeAppInsta
 				);
 
 				file.write_all(item.as_bytes())?;
-				file.write_all(b"\n")?;
+                println!("{}\n{}\n", networks_string, value);
 			}
 		}
 		None => {
