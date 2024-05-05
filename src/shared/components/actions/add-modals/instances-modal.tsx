@@ -1,6 +1,8 @@
-import { Show, createSignal } from "solid-js"
+import { Match, Show, Switch, createSignal } from "solid-js"
 import AddNodeAppModal from "./add-node-app";
 import AddClientModal from "./add-client";
+import AddNginxModal from "./add-nginx";
+import AddRouterModal from "./add-router";
 
 export default function InstancesModal(props: any) {
 	const [instanceOption, setInstanceOption] = createSignal("");
@@ -24,16 +26,25 @@ export default function InstancesModal(props: any) {
 					}}>
 						<option disabled selected value="" >Pick one instance type</option>
 						<option value="node-app">Node App</option>
-						<option value="router">Router</option>
 						<option value="client">Client</option>
+						<option value="router">Router</option>
+						<option value="nginx">Nginx</option>
 					</select>
 				</label>
-				<Show when={instanceOption() == "node-app"} >
-					<AddNodeAppModal config_name={config_name} />
-				</Show>
-				<Show when={instanceOption() == "client"} >
-					<AddClientModal config_name={config_name} />
-				</Show>
+				<Switch fallback={<div></div>}>
+					<Match when={instanceOption() == "node-app"} >
+						<AddNodeAppModal config_name={config_name} />
+					</Match>
+					<Match when={instanceOption() == "client"} >
+						<AddClientModal config_name={config_name} />
+					</Match>
+					<Match when={instanceOption() == "nginx"} >
+						<AddNginxModal config_name={config_name} />
+					</Match>
+					<Match when={instanceOption() == "router"} >
+						<AddRouterModal config_name={config_name} />
+					</Match>
+				</Switch>
 			</div>
 			<form method="dialog" class="modal-backdrop">
 				<button>close</button>

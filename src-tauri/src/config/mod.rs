@@ -1,6 +1,6 @@
 pub mod network_data;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::Write;
@@ -8,16 +8,20 @@ use std::process::Command;
 use tauri::AppHandle;
 
 use crate::instances::client::ClientInstance;
+use crate::instances::nginx::NginxInstance;
 use crate::instances::nodeapp::NodeAppInstance;
+use crate::instances::router::RouterInstance;
 use crate::state::ServiceAccess;
 
 use self::network_data::NetworkData;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ComposeConfig {
     pub name: String,
     pub node_apps: Option<HashMap<String, NodeAppInstance>>,
     pub clients: Option<HashMap<String, ClientInstance>>,
+    pub nginxs: Option<HashMap<String, NginxInstance>>,
+    pub routers: Option<HashMap<String, RouterInstance>>,
     pub networks: Option<HashMap<String, NetworkData>>,
 }
 
@@ -40,6 +44,8 @@ impl ComposeConfig {
             name,
             node_apps: None,
             clients: None,
+            nginxs: None,
+            routers: None,
             networks: None,
         };
 
@@ -86,82 +92,13 @@ impl ComposeConfig {
             Err(_) => return Err("Couldn't create file to write"),
         };
 
-        // write name
-        let _ = f.write(format!("name = \"{}\"\n\n", self.name).as_bytes());
-
-        // write node apps
-        if self.node_apps.is_some() {
-            for instance in self.node_apps.as_ref().unwrap() {
-                // header
-                let _ = f.write(format!("[node_apps.\"{}\"]\n", instance.0).as_bytes());
-
-                // networks
-                let _ = f.write("networks = [".as_bytes());
-                let mut first: bool = true;
-                for network in &instance.1.networks {
-                    if first {
-                        first = false;
-                    } else {
-                        let _ = f.write(", ".as_bytes());
-                    }
-                    let _ = f.write(format!("\"{}\"", network).as_bytes());
-                }
-                let _ = f.write("]\n".as_bytes());
-
-                // port
-                let _ = f.write(format!("port = {}\n", instance.1.port).as_bytes());
-
-                // replicas
-                if instance.1.replicas.is_some() {
-                    let _ = f
-                        .write(format!("replicas = {}\n", instance.1.replicas.unwrap()).as_bytes());
-                }
+        match toml::to_string(self) {
+            Ok(text) => {
+                if f.write(text.as_bytes()).is_err() {
+                    return Err("Failed to write to file");
+                };
             }
-        }
-
-        let _ = f.write("\n".as_bytes());
-
-        // write clients
-        if self.clients.is_some() {
-            for instance in self.clients.as_ref().unwrap() {
-                // header
-                let _ = f.write(format!("[clients.\"{}\"]\n", instance.0).as_bytes());
-
-                // networks
-                let _ = f.write("networks = [".as_bytes());
-                let mut first: bool = true;
-                for network in &instance.1.networks {
-                    if first {
-                        first = false;
-                    } else {
-                        let _ = f.write(", ".as_bytes());
-                    }
-                    let _ = f.write(format!("\"{}\"", network).as_bytes());
-                }
-                let _ = f.write("]\n".as_bytes());
-
-                // replicas
-                if instance.1.replicas.is_some() {
-                    let _ = f
-                        .write(format!("replicas = {}\n", instance.1.replicas.unwrap()).as_bytes());
-                }
-            }
-        }
-        
-        let _ = f.write("\n".as_bytes());
-
-        // write networks
-        if self.networks.is_some() {
-            for instance in self.networks.as_ref().unwrap() {
-                // header
-                let _ = f.write(format!("[networks.\"{}\"]\n", instance.0).as_bytes());
-
-                // subnet
-                let _ = f.write(format!("subnet = \"{}\"\n", instance.1.subnet).as_bytes());
-
-                // gateway
-                let _ = f.write(format!("gateway = \"{}\"\n", instance.1.gateway).as_bytes());
-            }
+            Err(_) => return Err("Failed to transform config to TOML"),
         }
 
         Ok(true)

@@ -9,6 +9,8 @@ mod utils;
 
 use config::network_data::NetworkData;
 use config::ComposeConfig;
+use instances::nginx::NginxInstance;
+use instances::router::RouterInstance;
 use instances::Instance;
 use instances::{client::ClientInstance, nodeapp::NodeAppInstance};
 use manager::ConfigManager;
@@ -83,6 +85,46 @@ fn add_client_instance_to_config(
 }
 
 #[tauri::command]
+fn add_nginx_instance_to_config(
+    config_name: String,
+    instance_name: String,
+    memory_limit: String,
+    cpus_limit: String,
+    memory_reservations: String,
+    app_handle: AppHandle,
+) -> Result<bool, String> {
+    app_handle.manager_mut(|man| {
+        man.add_instance_to_config(
+            config_name,
+            instance_name,
+            Instance::Nginx(NginxInstance {
+                networks: vec![],
+                memory_limit,
+                cpus_limit,
+                memory_reservations,
+            }),
+            &app_handle,
+        )
+    })
+}
+
+#[tauri::command]
+fn add_router_instance_to_config(
+    config_name: String,
+    instance_name: String,
+    app_handle: AppHandle,
+) -> Result<bool, String> {
+    app_handle.manager_mut(|man| {
+        man.add_instance_to_config(
+            config_name,
+            instance_name,
+            Instance::Router(RouterInstance { networks: vec![] }),
+            &app_handle,
+        )
+    })
+}
+
+#[tauri::command]
 fn add_network_to_config(
     config_name: String,
     network_name: String,
@@ -98,14 +140,6 @@ fn add_network_to_config(
             &app_handle,
         )
     })
-}
-
-#[tauri::command]
-fn get_instances_names(
-    config_name: String,
-    app_handle: AppHandle,
-) -> Result<Vec<(String, String)>, String> {
-    app_handle.manager_mut(|man| man.get_instances_name_list(config_name))
 }
 
 #[tauri::command]
@@ -127,8 +161,9 @@ fn main() {
             get_configs,
             add_nodeapp_instance_to_config,
             add_client_instance_to_config,
+            add_nginx_instance_to_config,
+            add_router_instance_to_config,
             add_network_to_config,
-            get_instances_names,
             get_instances
         ])
         .setup(|app| {
