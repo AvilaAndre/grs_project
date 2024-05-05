@@ -1,4 +1,5 @@
 pub mod network_data;
+pub mod docker;
 
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -163,6 +164,18 @@ impl ComposeConfig {
                 let _ = f.write(format!("gateway = \"{}\"\n", instance.1.gateway).as_bytes());
             }
         }
+
+
+		// -------------------- Matilde ----------------------
+
+        let dock_file = match File::create(("test.yml")) {
+            Ok(f) => f,
+            Err(_) => return Err("Couldn't create file to write"),
+        };
+
+		let _ = docker::write_node_app_instance(self.node_apps.clone(), &dock_file, 0);
+
+		// ---------------------------------------------------
 
         Ok(true)
     }
