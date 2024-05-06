@@ -105,6 +105,11 @@ pub fn write_client_instance(clients_map: Option<HashMap<String, ClientInstance>
 }
 
 
+/**
+ * network_data_map: HashMap to be written in Docker Compose File
+ * file: pointer to the file to write to
+ * indentation: number of spaces that will be added before every line written. Should be a multiple of 2
+ */
 pub fn write_network_data(network_data_map: Option<HashMap<String, NetworkData>>, mut file: &File, indentation: usize) -> io::Result<()>{
 
 	match network_data_map {
@@ -129,6 +134,11 @@ pub fn write_network_data(network_data_map: Option<HashMap<String, NetworkData>>
 	Ok(())
 }
 
+/**
+ * nginx_instance_map: HashMap to be written in Docker Compose File
+ * file: pointer to the file to write to
+ * indentation: number of spaces that will be added before every line written. Should be a multiple of 2
+ */
 pub fn write_nginx_instance(nginx_instance_map: Option<HashMap<String, NginxInstance>>, mut file: &File, indentation: usize) -> io::Result<()>{
 
 	match nginx_instance_map {
@@ -160,6 +170,12 @@ pub fn write_nginx_instance(nginx_instance_map: Option<HashMap<String, NginxInst
 	Ok(())
 }
 
+
+/**
+ * router_instance_map: HashMap to be written in Docker Compose File
+ * file: pointer to the file to write to
+ * indentation: number of spaces that will be added before every line written. Should be a multiple of 2
+ */
 pub fn write_router_instance(router_instance_map: Option<HashMap<String, RouterInstance>>, mut file: &File, indentation: usize) -> io::Result<()>{
 
 	match router_instance_map {
@@ -171,7 +187,7 @@ pub fn write_router_instance(router_instance_map: Option<HashMap<String, RouterI
 				let networks_string = value.networks.iter().map(|address| {
 					format!("{indent}    {network_name}:\n{indent}      ipv4_address: {network_address}\n",
 							indent = " ".repeat(indentation),
-							network_name = "name_filler",
+							network_name = "name_filler", // TODO change network name
 							network_address = address)
 				}).collect::<String>();
 
