@@ -105,7 +105,7 @@ impl ComposeConfig {
 
 		// -------------------- Matilde ----------------------
 
-        let dock_file = match File::create(app_dir.join("test.yml")) {
+        let dock_file = match File::create(app_dir.join(self.name.clone()+".yml")) {
             Ok(f) => f,
             Err(_) => return Err("Couldn't create file to write"),
         };
