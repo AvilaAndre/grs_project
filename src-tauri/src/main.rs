@@ -67,7 +67,6 @@ fn add_nodeapp_instance_to_config(
 fn add_client_instance_to_config(
     config_name: String,
     instance_name: String,
-    networks: Vec<String>,
     replicas: u8,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
@@ -76,7 +75,7 @@ fn add_client_instance_to_config(
             config_name,
             instance_name,
             Instance::Client(ClientInstance {
-                networks,
+                network_address: String::new(),
                 replicas: if replicas <= 1 { None } else { Some(replicas) },
             }),
             &app_handle,
@@ -98,7 +97,7 @@ fn add_nginx_instance_to_config(
             config_name,
             instance_name,
             Instance::Nginx(NginxInstance {
-                networks: vec![],
+                network_address: String::new(),
                 memory_limit,
                 cpus_limit,
                 memory_reservations,

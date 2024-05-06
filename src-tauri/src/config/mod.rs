@@ -1,4 +1,5 @@
 pub mod network_data;
+pub mod docker;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -100,6 +101,18 @@ impl ComposeConfig {
             }
             Err(_) => return Err("Failed to transform config to TOML"),
         }
+
+
+		// -------------------- Matilde ----------------------
+
+        let dock_file = match File::create(app_dir.join(self.name.clone()+".yml")) {
+            Ok(f) => f,
+            Err(_) => return Err("Couldn't create file to write"),
+        };
+
+		let _ = docker::write_docker_compose(&dock_file, self);
+
+		// ---------------------------------------------------
 
         Ok(true)
     }

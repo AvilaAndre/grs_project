@@ -5,7 +5,7 @@ import toast from "solid-toast";
 export default function AddClientModal(props: any) {
 	const [name, setName] = createSignal("");
 	const [replicas, setReplicas] = createSignal(1);
-	const [networks, setNetworks] = createSignal([]);
+	const [network, setNetwork] = createSignal("");
 
 	const config_name = props.config_name;
 
@@ -13,7 +13,7 @@ export default function AddClientModal(props: any) {
 		await invoke("add_client_instance_to_config", {
 			configName: config_name,
 			instanceName: name(),
-			networks: networks(),
+			network_adress: network(),
 			replicas: replicas()
 		}).then((add) => {
 			if (!add) toast.error(name() + " Client instance could not be created.")
@@ -23,7 +23,7 @@ export default function AddClientModal(props: any) {
 				//reset
 				setName("");
 				setReplicas(1);
-				setNetworks([]);
+				setNetwork("");
 			}
 		}).catch((error) => {
 			toast.error(error)
