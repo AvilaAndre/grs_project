@@ -4,6 +4,7 @@ use std::fs::File;
 use crate::instances::client::ClientInstance;
 use crate::instances::nginx::NginxInstance;
 use crate::instances::nodeapp::NodeAppInstance;
+use crate::instances::router::RouterInstance;
 
 use super::network_data::NetworkData;
 use super::ComposeConfig;
@@ -16,9 +17,9 @@ pub fn write_docker_compose(mut dock_file: &File, compose_config: &ComposeConfig
 	let _ = self::write_node_app_instance(compose_config.node_apps.clone(), &dock_file, 4);
 	let _ = self::write_client_instance(compose_config.clients.clone(), &dock_file, 4);
 	let _ = self::write_nginx_instance(compose_config.nginxs.clone(), &dock_file, 4);
-
+	let _ = self::write_router_instance(compose_config.routers.clone(), &dock_file, 4);
 	
-	let _ = dock_file.write_all(("networks:\n").as_bytes());
+	let _ = dock_file.write_all(("\nnetworks:\n").as_bytes());
 
 	let _ = self::write_network_data(compose_config.networks.clone(), &dock_file, 4);
 
@@ -36,10 +37,16 @@ pub fn write_node_app_instance(networks_map: Option<HashMap<String, NodeAppInsta
 		Some(map) => {
 			for (key, value) in map {
 				
-				let networks_string = format!("- {}", value.networks.join("\n- "));
+				let networks_string = value.networks.iter().map(|name| {
+					format!("{indent}    - {network_name}\n",
+							indent = " ".repeat(indentation),
+							network_name = name
+						)
+				}).collect::<String>();
+				
 
 				let item = format!(
-                    "{indent}{name}:\n{indent}  build: {image}\n{indent}  environment:\n{indent}    - PORT={port}\n{indent}  deploy:\n{indent}    replicas: {replicas}\n{indent}  networks:\n{indent}    {networks}\n",
+                    "{indent}{name}:\n{indent}  build: {image}\n{indent}  environment:\n{indent}    - PORT={port}\n{indent}  deploy:\n{indent}    replicas: {replicas}\n{indent}  networks:\n{networks}\n",
                     indent = " ".repeat(indentation),
 					name = key,
 					image = key, // FIXME TODO mudar isto para o path da image
@@ -116,9 +123,9 @@ pub fn write_network_data(network_data_map: Option<HashMap<String, NetworkData>>
 	Ok(())
 }
 
-pub fn write_nginx_instance(network_data_map: Option<HashMap<String, NginxInstance>>, mut file: &File, indentation: usize) -> io::Result<()>{
+pub fn write_nginx_instance(nginx_instance_map: Option<HashMap<String, NginxInstance>>, mut file: &File, indentation: usize) -> io::Result<()>{
 
-	match network_data_map {
+	match nginx_instance_map {
 		Some(map) => {
 			for (key, value) in map {
 
@@ -132,6 +139,36 @@ pub fn write_nginx_instance(network_data_map: Option<HashMap<String, NginxInstan
 					memory_reservations = value.memory_reservations,
 					network_address = value.network_address,
 					network_name = key// TODO mudar o nome da network
+				);
+				file.write_all(item.as_bytes())?;
+			}
+		}
+		None => {
+			println!("The option is empty.");
+		}
+	}
+
+	Ok(())
+}
+
+pub fn write_router_instance(router_instance_map: Option<HashMap<String, RouterInstance>>, mut file: &File, indentation: usize) -> io::Result<()>{
+
+	match router_instance_map {
+		Some(map) => {
+			for (key, value) in map {
+				let networks_string = value.networks.iter().map(|address| {
+					format!("{indent}    {network_name}:\n{indent}      ipv4_address: {network_address}\n",
+							indent = " ".repeat(indentation),
+							network_name = "name_filler",
+							network_address = address)
+				}).collect::<String>();
+
+				let item = format!(
+				  	"{indent}{key}:\n{indent}  build: {image}\n{indent}  container_name: {key}\n{indent}  hostname: {key}\n{indent}  networks:\n{networks}",
+					indent = " ".repeat(indentation),
+					image = key, // FIXME TODO mudar isto para o path da image
+					key = key,
+					networks = networks_string
 				);
 				file.write_all(item.as_bytes())?;
 			}

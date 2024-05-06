@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeAppInstance {
-    pub networks: Vec<String>,
+    pub networks: Vec<String>, // Network names 
     pub port: u16,
     pub replicas: Option<u8>,
 }
