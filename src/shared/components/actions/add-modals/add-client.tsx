@@ -13,7 +13,7 @@ export default function AddClientModal(props: any) {
 		await invoke("add_client_instance_to_config", {
 			configName: config_name,
 			instanceName: name(),
-			network: network(),
+			network_adress: network(),
 			replicas: replicas()
 		}).then((add) => {
 			if (!add) toast.error(name() + " Client instance could not be created.")
