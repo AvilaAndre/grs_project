@@ -1,15 +1,21 @@
-import { Show } from "solid-js";
+import { Show, onMount } from "solid-js";
 import InstanceInfoCard from "./cards/instance-info";
-import instanceManager from "../../stores/actions-instance"
+import configManager from "../../stores/config-manager";
 
 export default function InstanceOptionsBar(props: any) {
 	const config_name = props.config_name;
-	const { selectedInstance } = instanceManager;
+	const { getSelectedInstance, setSelectedConfig } = configManager;
+
+	onMount(async () => {
+		setSelectedConfig(config_name)
+	})
 
 	return (
-		<div class="absolute right-0 w-80 h-screen p-4 flex flex-col justify-start">
-			<Show when={!(selectedInstance().empty)} >
-				<InstanceInfoCard config_name={config_name} instance={selectedInstance()} />
+		<div class="w-fit h-screen flex flex-col justify-start">
+			<Show when={!(getSelectedInstance().empty)} >
+				<div class="w-80 p-4">
+					<InstanceInfoCard instance={getSelectedInstance()} />
+				</div>
 			</Show>
 		</div>
 	);

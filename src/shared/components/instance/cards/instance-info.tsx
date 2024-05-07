@@ -1,10 +1,10 @@
 import { Match, Switch } from "solid-js";
-import instanceManager from '../../../stores/actions-instance'
+import configManager from "../../../stores/config-manager";
 
 export default function InstanceInfoCard(props: any) {
 	const instance = props.instance;
 
-	const { unselectInstance } = instanceManager;
+	const { unselectInstance } = configManager;
 
 	return (
 		<div class="card w-full bg-primary text-primary-content shadow-xl">
@@ -16,7 +16,7 @@ export default function InstanceInfoCard(props: any) {
 						NodeApp
 					</Match>
 					<Match when={instance.type == "Client"}>
-						NodeApp
+						Client
 					</Match>
 				</Switch>
 				<div class="card-actions justify-end">

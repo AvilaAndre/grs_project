@@ -67,6 +67,7 @@ fn add_nodeapp_instance_to_config(
 fn add_client_instance_to_config(
     config_name: String,
     instance_name: String,
+    network_address: String,
     replicas: u8,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
@@ -75,7 +76,7 @@ fn add_client_instance_to_config(
             config_name,
             instance_name,
             Instance::Client(ClientInstance {
-                network_address: String::new(),
+                network_address,
                 replicas: if replicas <= 1 { None } else { Some(replicas) },
             }),
             &app_handle,
@@ -149,6 +150,11 @@ fn get_instances(
     app_handle.manager_mut(|man| man.get_instances_list(config_name))
 }
 
+#[tauri::command]
+fn start_config_docker(config_name: String, app_handle: AppHandle) -> Result<(), String> {
+    app_handle.manager(|man| man.start_config_docker(config_name, &app_handle))
+}
+
 fn main() {
     tauri::Builder::default()
         .manage(AppState {
@@ -163,7 +169,8 @@ fn main() {
             add_nginx_instance_to_config,
             add_router_instance_to_config,
             add_network_to_config,
-            get_instances
+            get_instances,
+            start_config_docker,
         ])
         .setup(|app| {
             let handle = app.handle();

@@ -1,27 +1,16 @@
-import { invoke } from "@tauri-apps/api";
 import { createSignal } from "solid-js";
-import toast from "solid-toast";
+import configManager from "../../../stores/config-manager";
 
-export default function AddRouterModal(props: any) {
+export default function AddRouterModal() {
 	const [name, setName] = createSignal("");
 
-	const config_name = props.config_name;
+	const { addNewRouterInstance } = configManager;
 
-	async function addNewNginx() {
-		await invoke("add_router_instance_to_config", {
-			configName: config_name,
-			instanceName: name(),
-		}).then((add) => {
-			if (!add) toast.error(name() + " Router instance could not be created.")
-			else {
-				toast.success(name() + " Router instance created.")
-
-				//reset
-				setName("");
-			}
-		}).catch((error) => {
-			toast.error(error)
-		});
+	async function addNewRouter() {
+		if (await addNewRouterInstance(name())) {
+			//reset
+			setName("");
+		}
 	}
 
 	return (
@@ -40,7 +29,7 @@ export default function AddRouterModal(props: any) {
 				} class="grow" placeholder="Router" />
 			</label>
 			<div class="modal-action">
-				<form method="dialog" onSubmit={addNewNginx}>
+				<form method="dialog" onSubmit={addNewRouter}>
 					<button class="btn">Add Instance</button>
 				</form>
 			</div>

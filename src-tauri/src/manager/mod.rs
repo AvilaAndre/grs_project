@@ -293,4 +293,15 @@ impl ConfigManager {
 
         Ok(instances)
     }
+
+    pub fn start_config_docker(&self, config_name: String, app_handle: &AppHandle) -> Result<(), String> {
+        let config: &ComposeConfig = match self.configs.get(&config_name) {
+            Some(c) => c,
+            None => return Err("Failed to find the configuration.".to_string()),
+        };
+
+        config.up(app_handle);
+
+        Ok(())
+    }
 }

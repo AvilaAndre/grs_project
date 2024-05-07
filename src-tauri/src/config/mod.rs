@@ -1,5 +1,5 @@
-pub mod network_data;
 pub mod docker;
+pub mod network_data;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -102,39 +102,39 @@ impl ComposeConfig {
             Err(_) => return Err("Failed to transform config to TOML"),
         }
 
+        // -------------------- Matilde ----------------------
 
-		// -------------------- Matilde ----------------------
-
-        let dock_file = match File::create(app_dir.join(self.name.clone()+".yml")) {
+        let dock_file = match File::create(app_dir.join(self.name.clone() + ".yml")) {
             Ok(f) => f,
             Err(_) => return Err("Couldn't create file to write"),
         };
 
-		let _ = docker::write_docker_compose(&dock_file, self);
+        let _ = docker::write_docker_compose(&dock_file, self);
 
-		// ---------------------------------------------------
+        // ---------------------------------------------------
 
         Ok(true)
     }
 
-    pub fn up(&self) -> bool {
+    pub fn up(&self, app_handle: &AppHandle) -> bool {
+        let app_dir = app_handle
+            .path_resolver()
+            .app_data_dir()
+            .expect("The app data directory should exist.");
+
         let output = Command::new("docker")
+            .current_dir(app_dir)
             .arg("compose")
             .arg("-f")
             .arg(self.name.clone() + ".yml")
             .arg("up")
             .arg("-d")
-            .output();
+            .output()
+            .expect("Failed to execute command");
 
-        match output {
-            Ok(success) => {
-                println!("output {:?}", success);
-                return true;
-            }
-            Err(why) => {
-                println!("Failed to launch docker compose file, reason: {:?}", why);
-            }
-        }
+        println!("Errors: {}", String::from_utf8_lossy(&output.stderr));
+
+        // check if really successful
 
         true
     }

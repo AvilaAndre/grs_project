@@ -1,33 +1,21 @@
-import { invoke } from "@tauri-apps/api";
 import { createSignal } from "solid-js";
-import toast from "solid-toast";
+import configManager from "../../../stores/config-manager";
 
-export default function AddClientModal(props: any) {
+export default function AddClientModal() {
 	const [name, setName] = createSignal("");
 	const [replicas, setReplicas] = createSignal(1);
 	const [network, setNetwork] = createSignal("");
 
-	const config_name = props.config_name;
+	const { addNewClientInstance } = configManager;
+
 
 	async function addNewClient() {
-		await invoke("add_client_instance_to_config", {
-			configName: config_name,
-			instanceName: name(),
-			network_adress: network(),
-			replicas: replicas()
-		}).then((add) => {
-			if (!add) toast.error(name() + " Client instance could not be created.")
-			else {
-				toast.success(name() + " Client instance created.")
-
-				//reset
-				setName("");
-				setReplicas(1);
-				setNetwork("");
-			}
-		}).catch((error) => {
-			toast.error(error)
-		});
+		if (await addNewClientInstance(name(), network(), replicas())) {
+			//reset
+			setName("");
+			setReplicas(1);
+			setNetwork("");
+		}
 	}
 
 	return (
@@ -40,10 +28,21 @@ export default function AddClientModal(props: any) {
 					val = val.trim()
 					val = val.replace(' ', '')
 
-					if (val)
-						setName(val)
+					setName(val)
 				}
 				} class="grow" placeholder="Client" />
+			</label>
+			<label class="input input-bordered flex items-center gap-2">
+				Network Address
+				<input type="text" value={network()} onChange={(e: Event) => {
+					// @ts-ignore
+					let val = e?.target?.value
+					val = val.trim()
+					val = val.replace(' ', '')
+
+					setNetwork(val)
+				}
+				} class="grow" placeholder="172.16.123.66" />
 			</label>
 			<label class="input input-bordered flex items-center gap-2">
 				Replicas
@@ -58,7 +57,7 @@ export default function AddClientModal(props: any) {
 			</label>
 			<div class="modal-action">
 				<form method="dialog" onSubmit={addNewClient}>
-					<button class="btn">Add Instance</button>
+					<button class="btn" disabled={!name().length || !network().length}>Add Instance</button>
 				</form>
 			</div>
 		</div>

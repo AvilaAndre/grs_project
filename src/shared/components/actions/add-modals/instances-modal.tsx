@@ -1,13 +1,12 @@
-import { Match, Show, Switch, createSignal } from "solid-js"
+import { Match, Switch, createSignal } from "solid-js"
 import AddNodeAppModal from "./add-node-app";
 import AddClientModal from "./add-client";
 import AddNginxModal from "./add-nginx";
 import AddRouterModal from "./add-router";
 
-export default function InstancesModal(props: any) {
+export default function InstancesModal() {
 	const [instanceOption, setInstanceOption] = createSignal("");
 
-	const config_name = props.config_name;
 
 	return (
 		<dialog id="instances_modal" class="modal">
@@ -33,16 +32,16 @@ export default function InstancesModal(props: any) {
 				</label>
 				<Switch fallback={<div></div>}>
 					<Match when={instanceOption() == "node-app"} >
-						<AddNodeAppModal config_name={config_name} />
+						<AddNodeAppModal />
 					</Match>
 					<Match when={instanceOption() == "client"} >
-						<AddClientModal config_name={config_name} />
+						<AddClientModal />
 					</Match>
 					<Match when={instanceOption() == "nginx"} >
-						<AddNginxModal config_name={config_name} />
+						<AddNginxModal />
 					</Match>
 					<Match when={instanceOption() == "router"} >
-						<AddRouterModal config_name={config_name} />
+						<AddRouterModal />
 					</Match>
 				</Switch>
 			</div>

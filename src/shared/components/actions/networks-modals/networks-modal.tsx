@@ -1,33 +1,20 @@
-import { invoke } from "@tauri-apps/api";
 import { createSignal } from "solid-js";
-import toast from "solid-toast";
+import configManager from "../../../stores/config-manager";
 
-export default function NetworksModal(props: any) {
+export default function NetworksModal() {
 	const [name, setName] = createSignal("");
 	const [subnet, setSubnet] = createSignal("");
 	const [gateway, setGateway] = createSignal("");
 
-	const config_name = props.config_name;
+	const { addNewNetworkToConfig } = configManager;
 
 	async function addNewNetwork() {
-		await invoke("add_network_to_config", {
-			configName: config_name,
-			networkName: name(),
-			subnet: subnet(),
-			gateway: gateway(),
-		}).then((add) => {
-			if (!add) toast.error(name() + " network could not be created.")
-			else {
-				toast.success(name() + " network created.")
-
-				//reset
-				setName("");
-				setSubnet("");
-				setGateway("");
-			}
-		}).catch((error) => {
-			toast.error(error)
-		});
+		if (await addNewNetworkToConfig(name(), subnet(), gateway())) {
+			//reset
+			setName("");
+			setSubnet("");
+			setGateway("");
+		}
 	}
 
 	return (

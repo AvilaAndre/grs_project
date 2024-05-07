@@ -1,36 +1,22 @@
-import { invoke } from "@tauri-apps/api";
 import { createSignal } from "solid-js";
-import toast from "solid-toast";
+import configManager from "../../../stores/config-manager";
 
-export default function AddNginxModal(props: any) {
+export default function AddNginxModal() {
 	const [name, setName] = createSignal("");
 	const [memoryLimit, setMemoryLimit] = createSignal("10M");
 	const [cpusLimit, setCpusLimit] = createSignal("0.80");
 	const [memoryReservations, setMemoryReservations] = createSignal("6M");
 
-	const config_name = props.config_name;
+	const { addNewNginxInstance } = configManager;
 
 	async function addNewNginx() {
-		await invoke("add_nginx_instance_to_config", {
-			configName: config_name,
-			instanceName: name(),
-			memoryLimit: memoryLimit(),
-			cpusLimit: cpusLimit(),
-			memoryReservations: memoryReservations(),
-		}).then((add) => {
-			if (!add) toast.error(name() + " Nginx instance could not be created.")
-			else {
-				toast.success(name() + " Nginx instance created.")
-
-				//reset
-				setName("");
-				setMemoryLimit("10M");
-				setCpusLimit("0.80");
-				setMemoryReservations("6M");
-			}
-		}).catch((error) => {
-			toast.error(error)
-		});
+		if (await addNewNginxInstance(name(), memoryLimit(), cpusLimit(), memoryReservations())) {
+			//reset
+			setName("");
+			setMemoryLimit("10M");
+			setCpusLimit("0.80");
+			setMemoryReservations("6M");
+		}
 	}
 
 	return (

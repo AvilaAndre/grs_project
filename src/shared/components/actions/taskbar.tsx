@@ -19,9 +19,9 @@ export default function TaskBar(props: any) {
 				</button>
 			</div>
 
-			<InstancesModal config_name={config_name} />
+			<InstancesModal />
 			<NetworksModal config_name={config_name} />
-			<InstancesListModal config_name={config_name} />
+			<InstancesListModal />
 		</>
 	);
 }

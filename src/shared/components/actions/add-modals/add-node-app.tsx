@@ -1,36 +1,22 @@
-import { invoke } from "@tauri-apps/api";
 import { createSignal } from "solid-js";
-import toast from "solid-toast";
+import configManager from "../../../stores/config-manager";
 
-export default function AddNodeAppModal(props: any) {
+export default function AddNodeAppModal() {
 	const [name, setName] = createSignal("");
 	const [port, setPort] = createSignal(5000);
 	const [replicas, setReplicas] = createSignal(1);
 	const [networks, setNetworks] = createSignal([]);
 
-	const config_name = props.config_name;
+	const { addNewNodeAppInstance } = configManager;
 
 	async function addNewNode() {
-		await invoke("add_nodeapp_instance_to_config", {
-			configName: config_name,
-			instanceName: name(),
-			networks: networks(),
-			port: port(),
-			replicas: replicas()
-		}).then((add) => {
-			if (!add) toast.error(name() + " Node App instance could not be created.")
-			else {
-				toast.success(name() + " Node App instance created.")
-
-				//reset
-				setName("");
-				setPort(5000);
-				setReplicas(1);
-				setNetworks([]);
-			}
-		}).catch((error) => {
-			toast.error(error)
-		});
+		if (await addNewNodeAppInstance(name(), networks(), port(), replicas())) {
+			//reset
+			setName("");
+			setPort(5000);
+			setReplicas(1);
+			setNetworks([]);
+		}
 	}
 
 	return (
