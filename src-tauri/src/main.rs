@@ -44,8 +44,7 @@ fn get_configs(app_handle: AppHandle) -> Vec<String> {
 fn add_nodeapp_instance_to_config(
     config_name: String,
     instance_name: String,
-    networks: Vec<String>,
-    port: u16,
+    network_names: Vec<String>,
     replicas: u8,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
@@ -54,9 +53,8 @@ fn add_nodeapp_instance_to_config(
             config_name,
             instance_name,
             Instance::NodeApp(NodeAppInstance {
-                networks,
-                port,
-                replicas: if replicas <= 1 { None } else { Some(replicas) },
+                network_names,
+                replicas: if replicas <= 1 { 1 } else { replicas },
             }),
             &app_handle,
         )

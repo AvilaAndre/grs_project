@@ -128,15 +128,13 @@ function createConfigManager() {
 
 	const addNewNodeAppInstance = async (
 		instanceName: string,
-		networks: string[],
-		port: number,
+		networkNames: string[],
 		replicas: number,
 	): Promise<boolean> => {
 		let result = await invoke("add_nodeapp_instance_to_config", {
 			configName: configName(),
 			instanceName,
-			networks,
-			port,
+			networkNames,
 			replicas,
 		}).then((add) => {
 			if (!add) toast.error(instanceName + " Node App instance could not be created.")

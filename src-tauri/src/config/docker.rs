@@ -1,29 +1,30 @@
-use std::io::Write;
-use std::{collections::HashMap, io};
-use std::fs::File;
 use crate::instances::client::ClientInstance;
 use crate::instances::nginx::NginxInstance;
 use crate::instances::nodeapp::NodeAppInstance;
 use crate::instances::router::RouterInstance;
+use std::fs::File;
+use std::io::Write;
+use std::{collections::HashMap, io};
 
 use super::network_data::NetworkData;
 use super::ComposeConfig;
 
+pub fn write_docker_compose(
+    mut dock_file: &File,
+    compose_config: &ComposeConfig,
+) -> io::Result<()> {
+    let _ = dock_file.write_all(("version: \"3\"\nservices:\n").as_bytes());
 
-pub fn write_docker_compose(mut dock_file: &File, compose_config: &ComposeConfig) -> io::Result<()>{
+    let _ = self::write_node_app_instance(compose_config.node_apps.clone(), &dock_file, 4);
+    let _ = self::write_client_instance(compose_config.clients.clone(), &dock_file, 4);
+    let _ = self::write_nginx_instance(compose_config.nginxs.clone(), &dock_file, 4);
+    let _ = self::write_router_instance(compose_config.routers.clone(), &dock_file, 4);
 
-	let _ = dock_file.write_all(("version: \"3\"\nservices:\n").as_bytes());
+    let _ = dock_file.write_all(("\nnetworks:\n").as_bytes());
 
-	let _ = self::write_node_app_instance(compose_config.node_apps.clone(), &dock_file, 4);
-	let _ = self::write_client_instance(compose_config.clients.clone(), &dock_file, 4);
-	let _ = self::write_nginx_instance(compose_config.nginxs.clone(), &dock_file, 4);
-	let _ = self::write_router_instance(compose_config.routers.clone(), &dock_file, 4);
-	
-	let _ = dock_file.write_all(("\nnetworks:\n").as_bytes());
+    let _ = self::write_network_data(compose_config.networks.clone(), &dock_file, 4);
 
-	let _ = self::write_network_data(compose_config.networks.clone(), &dock_file, 4);
-
-	Ok(())
+    Ok(())
 }
 
 /**
@@ -31,42 +32,46 @@ pub fn write_docker_compose(mut dock_file: &File, compose_config: &ComposeConfig
  * file: pointer to the file to write to
  * indentation: number of spaces that will be added before every line written. Should be a multiple of 2
  */
-pub fn write_node_app_instance(networks_map: Option<HashMap<String, NodeAppInstance>>, mut file: &File, indentation: usize) -> io::Result<()> {
+pub fn write_node_app_instance(
+    networks_map: Option<HashMap<String, NodeAppInstance>>,
+    mut file: &File,
+    indentation: usize,
+) -> io::Result<()> {
+    match networks_map {
+        Some(map) => {
+            file.write_all(b"\n## NodeApp Instances\n")?;
 
-	match networks_map {
-		Some(map) => {
+            for (key, value) in map {
+                let networks_string = value
+                    .network_names
+                    .iter()
+                    .map(|name| {
+                        format!(
+                            "{indent}    - {network_name}\n",
+                            indent = " ".repeat(indentation),
+                            network_name = name
+                        )
+                    })
+                    .collect::<String>();
 
-			file.write_all(b"\n## NodeApp Instances\n")?;
-
-			for (key, value) in map {
-				
-				let networks_string = value.networks.iter().map(|name| {
-					format!("{indent}    - {network_name}\n",
-							indent = " ".repeat(indentation),
-							network_name = name
-						)
-				}).collect::<String>();
-				
-
-				let item = format!(
-                    "{indent}{name}:\n{indent}  build: {image}\n{indent}  environment:\n{indent}    - PORT={port}\n{indent}  deploy:\n{indent}    replicas: {replicas}\n{indent}  networks:\n{networks}\n",
+                let item = format!(
+                    "{indent}{name}:\n{indent}  build: {image}\n{indent}  environment:\n{indent}    - PORT=5050\n{indent}  deploy:\n{indent}    replicas: {replicas}\n{indent}  networks:\n{networks}\n",
                     indent = " ".repeat(indentation),
 					name = key,
 					image = "./images/node-app",
-					port = value.port,
-					replicas = value.replicas.unwrap_or(1),
+					replicas = value.replicas,
 					networks = networks_string
 				);
 
-				file.write_all(item.as_bytes())?;
-			}
-		}
-		None => {
-			println!("The option is empty.");
-		}
-	}
+                file.write_all(item.as_bytes())?;
+            }
+        }
+        None => {
+            println!("The option is empty.");
+        }
+    }
 
-	Ok(())
+    Ok(())
 }
 
 /**
@@ -74,16 +79,17 @@ pub fn write_node_app_instance(networks_map: Option<HashMap<String, NodeAppInsta
  * file: pointer to the file to write to
  * indentation: number of spaces that will be added before every line written. Should be a multiple of 2
  */
-pub fn write_client_instance(clients_map: Option<HashMap<String, ClientInstance>>, mut file: &File, indentation: usize) -> io::Result<()> {
-
+pub fn write_client_instance(
+    clients_map: Option<HashMap<String, ClientInstance>>,
+    mut file: &File,
+    indentation: usize,
+) -> io::Result<()> {
     match clients_map {
-		Some(map) => {
+        Some(map) => {
+            file.write_all(b"\n## Client Instances\n")?;
 
-			file.write_all(b"\n## Client Instances\n")?;
-
-			for (key, value) in map {
-
-				let item = format!(
+            for (key, value) in map {
+                let item = format!(
                    "{indent}{key}:\n{indent}  build: {image}\n{indent}  container_name: {key}\n{indent}  deploy:\n{indent}    replicas: {replicas}\n{indent}  tty: true\n{indent}  networks:\n{indent}    {network_name}:\n{indent}      ipv4_address: {network_address}\n\n",
                     indent = " ".repeat(indentation),
 					key = key,
@@ -93,45 +99,46 @@ pub fn write_client_instance(clients_map: Option<HashMap<String, ClientInstance>
 					network_address = value.network_address
 				);
 
-				file.write_all(item.as_bytes())?;
-			}
-		}
-		None => {
-			println!("The option is empty.");
-		}
-	}
+                file.write_all(item.as_bytes())?;
+            }
+        }
+        None => {
+            println!("The option is empty.");
+        }
+    }
 
     Ok(())
 }
-
 
 /**
  * network_data_map: HashMap to be written in Docker Compose File
  * file: pointer to the file to write to
  * indentation: number of spaces that will be added before every line written. Should be a multiple of 2
  */
-pub fn write_network_data(network_data_map: Option<HashMap<String, NetworkData>>, mut file: &File, indentation: usize) -> io::Result<()>{
-
-	match network_data_map {
-		Some(map) => {
-			for (key, value) in map {
-
-				let item = format!(
+pub fn write_network_data(
+    network_data_map: Option<HashMap<String, NetworkData>>,
+    mut file: &File,
+    indentation: usize,
+) -> io::Result<()> {
+    match network_data_map {
+        Some(map) => {
+            for (key, value) in map {
+                let item = format!(
 				   "{indent}{key}:\n{indent}  ipam:\n{indent}    config:\n{indent}      - subnet: {subnet}\n{indent}        gateway: {gateway}\n",
 					indent = " ".repeat(indentation),
 					key = key,
 					subnet = value.subnet,
 					gateway = value.gateway
 				);
-				file.write_all(item.as_bytes())?;
-			}
-		}
-		None => {
-			println!("The option is empty.");
-		}
-	}
+                file.write_all(item.as_bytes())?;
+            }
+        }
+        None => {
+            println!("The option is empty.");
+        }
+    }
 
-	Ok(())
+    Ok(())
 }
 
 /**
@@ -139,16 +146,17 @@ pub fn write_network_data(network_data_map: Option<HashMap<String, NetworkData>>
  * file: pointer to the file to write to
  * indentation: number of spaces that will be added before every line written. Should be a multiple of 2
  */
-pub fn write_nginx_instance(nginx_instance_map: Option<HashMap<String, NginxInstance>>, mut file: &File, indentation: usize) -> io::Result<()>{
+pub fn write_nginx_instance(
+    nginx_instance_map: Option<HashMap<String, NginxInstance>>,
+    mut file: &File,
+    indentation: usize,
+) -> io::Result<()> {
+    match nginx_instance_map {
+        Some(map) => {
+            file.write_all(b"\n## Nginx Instances\n")?;
 
-	match nginx_instance_map {
-		Some(map) => {
-
-			file.write_all(b"\n## Nginx Instances\n")?;
-			
-			for (key, value) in map {
-
-				let item = format!(
+            for (key, value) in map {
+                let item = format!(
 					"{indent}{key}:\n{indent}  build: {image}\n{indent}  privileged: true\n{indent}  deploy:\n{indent}    resources:\n{indent}      limits:\n{indent}        cpus: \"{cpus_limit}\"\n{indent}        memory: {memory_limit}\n{indent}      reservations:\n{indent}        memory: {memory_reservations}\n{indent}  ports:\n{indent}    - 80\n{indent}  networks:\n{indent}    {network_name}:\n{indent}      ipv4_address: {network_address}\n\n",
 					indent = " ".repeat(indentation),
 					image = "./images/nginx",
@@ -159,52 +167,53 @@ pub fn write_nginx_instance(nginx_instance_map: Option<HashMap<String, NginxInst
 					network_address = value.network_address,
 					network_name = key// TODO mudar para o nome da network
 				);
-				file.write_all(item.as_bytes())?;
-			}
-		}
-		None => {
-			println!("The option is empty.");
-		}
-	}
+                file.write_all(item.as_bytes())?;
+            }
+        }
+        None => {
+            println!("The option is empty.");
+        }
+    }
 
-	Ok(())
+    Ok(())
 }
-
 
 /**
  * router_instance_map: HashMap to be written in Docker Compose File
  * file: pointer to the file to write to
  * indentation: number of spaces that will be added before every line written. Should be a multiple of 2
  */
-pub fn write_router_instance(router_instance_map: Option<HashMap<String, RouterInstance>>, mut file: &File, indentation: usize) -> io::Result<()>{
+pub fn write_router_instance(
+    router_instance_map: Option<HashMap<String, RouterInstance>>,
+    mut file: &File,
+    indentation: usize,
+) -> io::Result<()> {
+    match router_instance_map {
+        Some(map) => {
+            file.write_all(b"\n## Router Instances\n")?;
 
-	match router_instance_map {
-		Some(map) => {
-
-			file.write_all(b"\n## Router Instances\n")?;
-
-			for (key, value) in map {
-				let networks_string = value.networks.iter().map(|address| {
+            for (key, value) in map {
+                let networks_string = value.networks.iter().map(|address| {
 					format!("{indent}    {network_name}:\n{indent}      ipv4_address: {network_address}\n",
 							indent = " ".repeat(indentation),
 							network_name = "name_filler", // TODO change network name
 							network_address = address)
 				}).collect::<String>();
 
-				let item = format!(
+                let item = format!(
 				  	"{indent}{key}:\n{indent}  build: {image}\n{indent}  container_name: {key}\n{indent}  hostname: {key}\n{indent}  networks:\n{networks}\n",
 					indent = " ".repeat(indentation),
 					image = "./images/baseimage",
 					key = key,
 					networks = networks_string
 				);
-				file.write_all(item.as_bytes())?;
-			}
-		}
-		None => {
-			println!("The option is empty.");
-		}
-	}
+                file.write_all(item.as_bytes())?;
+            }
+        }
+        None => {
+            println!("The option is empty.");
+        }
+    }
 
-	Ok(())
+    Ok(())
 }
