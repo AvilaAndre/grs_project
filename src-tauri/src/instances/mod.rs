@@ -1,3 +1,4 @@
+pub mod types;
 pub mod client;
 pub mod nginx;
 pub mod nodeapp;

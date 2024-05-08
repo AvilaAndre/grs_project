@@ -33,11 +33,11 @@ pub fn write_docker_compose(
  * indentation: number of spaces that will be added before every line written. Should be a multiple of 2
  */
 pub fn write_node_app_instance(
-    networks_map: Option<HashMap<String, NodeAppInstance>>,
+    node_app_map: Option<HashMap<String, NodeAppInstance>>,
     mut file: &File,
     indentation: usize,
 ) -> io::Result<()> {
-    match networks_map {
+    match node_app_map{
         Some(map) => {
             file.write_all(b"\n## NodeApp Instances\n")?;
 
@@ -54,14 +54,20 @@ pub fn write_node_app_instance(
                     })
                     .collect::<String>();
 
-                let item = format!(
-                    "{indent}{name}:\n{indent}  build: {image}\n{indent}  environment:\n{indent}    - PORT=5050\n{indent}  deploy:\n{indent}    replicas: {replicas}\n{indent}  networks:\n{networks}\n",
+                let mut item = format!(
+                    "{indent}{name}:\n{indent}  build: {image}\n{indent}  environment:\n{indent}    - PORT=5050\n{indent}  deploy:\n{indent}    replicas: {replicas}\n",
                     indent = " ".repeat(indentation),
 					name = key,
 					image = "./images/node-app",
 					replicas = value.replicas,
-					networks = networks_string
 				);
+
+                if value.network_names.len() > 0 {
+                    item = item.clone() + format!("{indent}  networks:\n{networks}\n",
+                        indent = " ".repeat(indentation),
+			            networks = networks_string,
+                    ).clone().as_str();
+                }
 
                 file.write_all(item.as_bytes())?;
             }
@@ -90,13 +96,12 @@ pub fn write_client_instance(
 
             for (key, value) in map {
                 let item = format!(
-                   "{indent}{key}:\n{indent}  build: {image}\n{indent}  container_name: {key}\n{indent}  deploy:\n{indent}    replicas: {replicas}\n{indent}  tty: true\n{indent}  networks:\n{indent}    {network_name}:\n{indent}      ipv4_address: {network_address}\n\n",
+                   "{indent}{key}:\n{indent}  build: {image}\n{indent}  container_name: {key}\n{indent}  deploy:\n{indent}    replicas: {replicas}\n{indent}  tty: true\n{indent}  networks:\n{indent}    {network_name}:\n\n",
                     indent = " ".repeat(indentation),
 					key = key,
 					image = "./images/baseimage", 
-					replicas = value.replicas.unwrap_or(1),
-					network_name = key, // TODO mudar para o nome da network
-					network_address = value.network_address
+					replicas = value.replicas,
+					network_name = value.network_name,
 				);
 
                 file.write_all(item.as_bytes())?;
@@ -164,8 +169,9 @@ pub fn write_nginx_instance(
 					cpus_limit = value.cpus_limit,
 					memory_limit = value.memory_limit,
 					memory_reservations = value.memory_reservations,
-					network_address = value.network_address,
-					network_name = key// TODO mudar para o nome da network
+                    network_address = value.networks[0].ipv4_address, // TODO: should be able to have more
+                                                             // than one network
+					network_name = key //TODO: mudar para o nome da network
 				);
                 file.write_all(item.as_bytes())?;
             }
@@ -193,11 +199,11 @@ pub fn write_router_instance(
             file.write_all(b"\n## Router Instances\n")?;
 
             for (key, value) in map {
-                let networks_string = value.networks.iter().map(|address| {
+                let networks_string = value.networks.iter().map(|network| {
 					format!("{indent}    {network_name}:\n{indent}      ipv4_address: {network_address}\n",
 							indent = " ".repeat(indentation),
-							network_name = "name_filler", // TODO change network name
-							network_address = address)
+							network_name = network.network_name, 
+							network_address = network.ipv4_address)
 				}).collect::<String>();
 
                 let item = format!(

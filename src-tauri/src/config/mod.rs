@@ -79,6 +79,8 @@ impl ComposeConfig {
             }
         };
 
+        let _ = config.write(&app_handle); // TODO: Replace this with docker write
+
         Ok(config)
     }
 
