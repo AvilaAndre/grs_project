@@ -136,8 +136,31 @@ impl ComposeConfig {
 
         println!("Errors: {}", String::from_utf8_lossy(&output.stderr));
 
+        println!("output {:?}", output);
+
         // check if really successful
 
         true
+    }
+
+    pub fn get_stats(&self, app_handle: &AppHandle) {
+        let app_dir = app_handle
+            .path_resolver()
+            .app_data_dir()
+            .expect("The app data directory should exist.");
+
+        let output = Command::new("docker")
+            .current_dir(app_dir)
+            .arg("compose")
+            .arg("-f")
+            .arg(self.name.clone() + ".yml")
+            .arg("stats")
+            .arg("--no-stream")
+            .arg("--format")
+            .arg("json")
+            .output()
+            .expect("Failed to execute command");
+
+        println!("output {:?}", output);
     }
 }

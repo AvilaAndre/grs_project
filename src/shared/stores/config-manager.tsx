@@ -226,6 +226,18 @@ function createConfigManager() {
 		return result;
 	}
 
+	const getContainerStats = async () => {
+		try {
+			let result = await invoke("get_container_stats", {
+				configName: configName(),
+			});
+			console.log("result: ", result);
+		} catch (err) {
+			console.log("Stats fetch failed:", err);
+		}
+
+	}
+
 	return {
 		getConfigsList, createNewConfig,
 		getSelectedConfig, setSelectedConfig,
@@ -233,6 +245,7 @@ function createConfigManager() {
 		unselectInstance, selectInstance, getSelectedInstance,
 		addNewNodeAppInstance, addNewClientInstance, addNewNginxInstance, addNewRouterInstance,
 		addNewNetworkToConfig,
+		getContainerStats,
 	};
 }
 

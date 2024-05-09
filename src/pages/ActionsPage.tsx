@@ -2,13 +2,22 @@ import { A } from "@solidjs/router"
 import TaskBar from "../shared/components/actions/taskbar"
 import InstanceOptionsBar from "../shared/components/instance/instance-options-bar"
 import { invoke } from "@tauri-apps/api";
+import { onMount } from "solid-js";
+import configManager from "../shared/stores/config-manager";
 
 export default function ActionsPage(props: any) {
 	const config_name = props.params.id
 
+	const { getContainerStats } = configManager;
+
 	async function startConfigDocker() {
 		console.log(await invoke("start_config_docker", { configName: config_name }));
 	}
+
+	onMount(async () => {
+		await getContainerStats();
+		setInterval(async () => await getContainerStats(), 200);
+	});
 
 	return (
 		<>

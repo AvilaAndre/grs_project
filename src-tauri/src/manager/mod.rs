@@ -304,4 +304,16 @@ impl ConfigManager {
 
         Ok(())
     }
+
+    pub fn get_config_docker_stats(&self, config_name: String, app_handle: &AppHandle) -> Result<(), String> {
+        println!("config_name {}", config_name);
+        let config: &ComposeConfig = match self.configs.get(&config_name) {
+            Some(c) => c,
+            None => return Err("Failed to find the configuration.".to_string()),
+        };
+
+        config.get_stats(app_handle);
+
+        Ok(())
+    }
 }

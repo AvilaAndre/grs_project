@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod config;
+mod docker;
 mod instances;
 mod manager;
 mod state;
@@ -153,6 +154,11 @@ fn start_config_docker(config_name: String, app_handle: AppHandle) -> Result<(),
     app_handle.manager(|man| man.start_config_docker(config_name, &app_handle))
 }
 
+#[tauri::command]
+async fn get_container_stats(config_name: String, app_handle: AppHandle) -> Result<(), String> {
+    app_handle.manager(|man| man.get_config_docker_stats(config_name, &app_handle))
+}
+
 fn main() {
     tauri::Builder::default()
         .manage(AppState {
@@ -169,6 +175,7 @@ fn main() {
             add_network_to_config,
             get_instances,
             start_config_docker,
+            get_container_stats,
         ])
         .setup(|app| {
             let handle = app.handle();
