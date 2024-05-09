@@ -1,5 +1,6 @@
 use crate::{
     config::{network_data::NetworkData, ComposeConfig},
+    docker::dockerstats::DockerStats,
     instances::Instance,
     utils::copy_dir_all,
 };
@@ -294,7 +295,11 @@ impl ConfigManager {
         Ok(instances)
     }
 
-    pub fn start_config_docker(&self, config_name: String, app_handle: &AppHandle) -> Result<(), String> {
+    pub fn start_config_docker(
+        &self,
+        config_name: String,
+        app_handle: &AppHandle,
+    ) -> Result<(), String> {
         let config: &ComposeConfig = match self.configs.get(&config_name) {
             Some(c) => c,
             None => return Err("Failed to find the configuration.".to_string()),
@@ -305,15 +310,16 @@ impl ConfigManager {
         Ok(())
     }
 
-    pub fn get_config_docker_stats(&self, config_name: String, app_handle: &AppHandle) -> Result<(), String> {
-        println!("config_name {}", config_name);
+    pub fn get_config_docker_stats(
+        &self,
+        config_name: String,
+        app_handle: &AppHandle,
+    ) -> Result<Vec<DockerStats>, String> {
         let config: &ComposeConfig = match self.configs.get(&config_name) {
             Some(c) => c,
             None => return Err("Failed to find the configuration.".to_string()),
         };
 
-        config.get_stats(app_handle);
-
-        Ok(())
+        config.get_stats(app_handle)
     }
 }

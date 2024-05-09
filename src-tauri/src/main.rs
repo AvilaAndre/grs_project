@@ -10,6 +10,7 @@ mod utils;
 
 use config::network_data::NetworkData;
 use config::ComposeConfig;
+use docker::dockerstats::DockerStats;
 use instances::nginx::NginxInstance;
 use instances::router::RouterInstance;
 use instances::Instance;
@@ -155,7 +156,7 @@ fn start_config_docker(config_name: String, app_handle: AppHandle) -> Result<(),
 }
 
 #[tauri::command]
-async fn get_container_stats(config_name: String, app_handle: AppHandle) -> Result<(), String> {
+async fn get_container_stats(config_name: String, app_handle: AppHandle) -> Result<Vec<DockerStats>, String> {
     app_handle.manager(|man| man.get_config_docker_stats(config_name, &app_handle))
 }
 
