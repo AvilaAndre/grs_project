@@ -33,7 +33,7 @@
 		  "resources/*"
 	  ],
       "targets": "all",
-      "identifier": "com.tauri.dev",
+      "identifier": "com.netking.dev",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",

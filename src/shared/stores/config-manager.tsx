@@ -2,11 +2,22 @@ import { invoke } from "@tauri-apps/api";
 import { createRoot, createSignal } from "solid-js";
 import toast from "solid-toast";
 
+type DockerStats = {
+	BlockIO: string,
+	CPUPerc: string,
+	ID: string,
+	MemPerc: string,
+	MemUsage: string,
+	Name: string,
+	NetIO: string,
+};
+
 export type InstanceData = {
 	empty: boolean,
 	name: string,
 	type: string,
-	data: unknown
+	data: unknown,
+	stats: DockerStats[],
 };
 
 export const InstanceTypes = ["NodeApp", "Client", "Nginx", "Router"];
@@ -17,12 +28,14 @@ const emptyInstance: InstanceData = {
 	empty: true,
 	name: "",
 	type: "",
-	data: undefined
+	data: undefined,
+	stats: [],
 }
 
 function createConfigManager() {
 	const [configsList, setConfigsList] = createSignal([]);
 	const [configName, setConfigName] = createSignal("");
+	let instancesUpdateNum = 0;
 	const [instances, setInstances] = createSignal(emptyInstanceList)
 	const [selectedInstance, setSelectedInstance] = createSignal(emptyInstance);
 
@@ -68,12 +81,20 @@ function createConfigManager() {
 				name: inst[0],
 				type: Object.keys(inst[1])[0],
 				data: Object.values(inst[1])[0],
-				empty: false
+				empty: false,
+				stats: [],
 			}
 
 			return parsed_inst
 		})
-		setInstances(instances_parsed)
+
+		setInstancesWrapper(instances_parsed)
+	}
+
+	const setInstancesWrapper = (insts: InstanceData[]) => {
+		instancesUpdateNum = Math.random();
+		setInstances(insts);
+
 	}
 
 	const getInstancesList = (): InstanceData[] => {
@@ -90,7 +111,8 @@ function createConfigManager() {
 							name: res[i][0],
 							type: Object.keys(res[i][1])[0],
 							data: Object.values(res[i][1])[0],
-							empty: false
+							empty: false,
+							stats: [],
 						})
 						break
 					}
@@ -228,10 +250,26 @@ function createConfigManager() {
 
 	const getContainerStats = async () => {
 		try {
-			let result = await invoke("get_container_stats", {
+			let result: DockerStats[] = await invoke("get_container_stats", {
 				configName: configName(),
 			});
-			console.log("result: ", result);
+
+			const instNum = instancesUpdateNum;
+			let insts = instances();
+			for (let i = 0; i < result.length; i++) {
+				let result_name = result[i].Name.slice(0, 14) == 'comnetkingdev-' ? result[i].Name.slice(14) : result[i].Name
+				result_name = result_name.slice(0, result_name.match('-')?.index);
+				for (let j = 0; j < insts.length; j++) {
+					if (insts[j].name == result_name) {
+						break
+					}
+				}
+			}
+
+			if (instNum == instancesUpdateNum)
+				setInstancesWrapper(insts)
+
+
 		} catch (err) {
 			console.log("Stats fetch failed:", err);
 		}
