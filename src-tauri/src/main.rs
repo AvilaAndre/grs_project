@@ -11,6 +11,7 @@ mod utils;
 use config::network_data::NetworkData;
 use config::ComposeConfig;
 use docker::dockerstats::DockerStats;
+use docker::watcher::watch_containers;
 use instances::nginx::NginxInstance;
 use instances::router::RouterInstance;
 use instances::Instance;
@@ -152,11 +153,14 @@ fn get_instances(
 
 #[tauri::command]
 fn start_config_docker(config_name: String, app_handle: AppHandle) -> Result<(), String> {
-    app_handle.manager(|man| man.start_config_docker(config_name, &app_handle))
+    app_handle.manager_mut(|man| man.start_config_docker(config_name, &app_handle))
 }
 
 #[tauri::command]
-async fn get_container_stats(config_name: String, app_handle: AppHandle) -> Result<Vec<DockerStats>, String> {
+async fn get_container_stats(
+    config_name: String,
+    app_handle: AppHandle,
+) -> Result<Vec<DockerStats>, String> {
     app_handle.manager(|man| man.get_config_docker_stats(config_name, &app_handle))
 }
 
@@ -185,6 +189,8 @@ fn main() {
             let manager = ConfigManager::initialize(&handle)
                 .expect("ConfigManager initialize should succeed");
             *app_state.manager.lock().unwrap() = Some(manager);
+
+            std::thread::spawn(|| watch_containers(handle));
 
             Ok(())
         })

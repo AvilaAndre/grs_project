@@ -1,13 +1,22 @@
-import { Show, onMount } from "solid-js";
+import { Show, createSignal, onCleanup, onMount } from "solid-js";
 import InstanceInfoCard from "./cards/instance-info";
 import configManager from "../../stores/config-manager";
 
-export default function InstanceOptionsBar(props: any) {
-	const config_name = props.config_name;
-	const { getSelectedInstance, setSelectedConfig } = configManager;
+export default function InstanceOptionsBar() {
+	const { getSelectedInstance } = configManager;
+	const [gettingStats, setGettingStats] = createSignal(false);
+
+	const { getContainerStats } = configManager;
 
 	onMount(async () => {
-		setSelectedConfig(config_name)
+		if (!gettingStats()) {
+			setGettingStats(true);
+			setInterval(() => { if (gettingStats()) getContainerStats() }, 1000);
+		}
+	});
+
+	onCleanup(() => {
+		setGettingStats(false);
 	})
 
 	return (

@@ -2,9 +2,7 @@ import InstancesModal from "./add-modals/instances-modal";
 import InstancesListModal from "./instances-list/instances-list-modal";
 import NetworksModal from "./networks-modals/networks-modal";
 
-export default function TaskBar(props: any) {
-	const config_name = props.config_name;
-
+export default function TaskBar() {
 	return (
 		<>
 			<div class="absolute top-1/2 left-0 transform -translate-y-1/2 ml-4 join join-vertical">
@@ -20,7 +18,7 @@ export default function TaskBar(props: any) {
 			</div>
 
 			<InstancesModal />
-			<NetworksModal config_name={config_name} />
+			<NetworksModal />
 			<InstancesListModal />
 		</>
 	);

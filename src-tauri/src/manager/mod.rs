@@ -4,17 +4,26 @@ use crate::{
     instances::Instance,
     utils::copy_dir_all,
 };
-use std::{collections::HashMap, fs};
+use std::{
+    collections::{HashMap, VecDeque},
+    fs,
+};
 use tauri::AppHandle;
 
 pub struct ConfigManager {
+    pub selected_config: Option<String>,
     pub configs: HashMap<String, ComposeConfig>,
+    pub stats_recorded: HashMap<String, VecDeque<DockerStats>>,
 }
+
+const STATS_CAPACITY: usize = 50;
 
 impl ConfigManager {
     pub fn initialize(app_handle: &AppHandle) -> Result<Self, &'static str> {
-        let mut instance = Self {
+        let mut manager = Self {
+            selected_config: None,
             configs: HashMap::new(),
+            stats_recorded: HashMap::new(),
         };
 
         // create folder for the images
@@ -29,9 +38,9 @@ impl ConfigManager {
         // copy app folders
         let _ = copy_dir_all("resources", images_dir);
 
-        instance.fetch_configs(app_handle);
+        manager.fetch_configs(app_handle);
 
-        Ok(instance)
+        Ok(manager)
     }
 
     pub fn fetch_configs(&mut self, app_handle: &AppHandle) {
@@ -296,7 +305,7 @@ impl ConfigManager {
     }
 
     pub fn start_config_docker(
-        &self,
+        &mut self,
         config_name: String,
         app_handle: &AppHandle,
     ) -> Result<(), String> {
@@ -306,6 +315,8 @@ impl ConfigManager {
         };
 
         config.up(app_handle);
+
+        self.selected_config = Some(config_name);
 
         Ok(())
     }
@@ -321,5 +332,25 @@ impl ConfigManager {
         };
 
         config.get_stats(app_handle)
+    }
+
+    pub fn add_new_docker_stats(&mut self, stats: DockerStats) {
+        match self.stats_recorded.get_mut(&stats.name) {
+            Some(deque) => {
+                if deque.len() == STATS_CAPACITY {
+                    deque.remove(0);
+                }
+                deque.push_back(stats);
+            }
+
+            None => {
+                self.stats_recorded
+                    .insert(stats.name.clone(), VecDeque::with_capacity(STATS_CAPACITY));
+                self.stats_recorded
+                    .get_mut(&stats.name)
+                    .unwrap()
+                    .push_front(stats);
+            }
+        }
     }
 }

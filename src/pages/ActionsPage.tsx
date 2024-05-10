@@ -9,13 +9,14 @@ export default function ActionsPage(props: any) {
 	const config_name = props.params.id
 	const [gettingStats, setGettingStats] = createSignal(false);
 
-	const { getContainerStats } = configManager;
+	const { setSelectedConfig, getContainerStats } = configManager;
 
 	async function startConfigDocker() {
 		console.log(await invoke("start_config_docker", { configName: config_name }));
 	}
 
 	onMount(async () => {
+		setSelectedConfig(config_name)
 		if (!gettingStats()) {
 			setGettingStats(true);
 			// setInterval(() => getContainerStats(), 1000); commented because it breaks the application if reloaded
@@ -44,10 +45,10 @@ export default function ActionsPage(props: any) {
 						</div>
 					</div>
 
-					<TaskBar config_name={config_name} />
+					<TaskBar />
 				</section>
 				<section class="w-fit">
-					<InstanceOptionsBar config_name={config_name} />
+					<InstanceOptionsBar />
 				</section>
 			</div>
 		</>

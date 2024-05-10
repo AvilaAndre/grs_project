@@ -94,7 +94,6 @@ function createConfigManager() {
 	const setInstancesWrapper = (insts: InstanceData[]) => {
 		instancesUpdateNum = Math.random();
 		setInstances(insts);
-
 	}
 
 	const getInstancesList = (): InstanceData[] => {
@@ -244,11 +243,12 @@ function createConfigManager() {
 			return false;
 		});
 
-		updateConfig();
+		await updateConfig();
 		return result;
 	}
 
 	const getContainerStats = async () => {
+		return
 		try {
 			let result: DockerStats[] = await invoke("get_container_stats", {
 				configName: configName(),
