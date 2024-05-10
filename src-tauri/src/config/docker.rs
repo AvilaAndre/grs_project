@@ -169,8 +169,7 @@ pub fn write_nginx_instance(
 					cpus_limit = value.cpus_limit,
 					memory_limit = value.memory_limit,
 					memory_reservations = value.memory_reservations,
-                    network_address = value.networks[0].ipv4_address, // TODO: should be able to have more
-                                                             // than one network
+                    network_address = value.networks[0].ipv4_address, // TODO: should be able to have more than one network
 					network_name = key //TODO: mudar para o nome da network
 				);
                 file.write_all(item.as_bytes())?;
