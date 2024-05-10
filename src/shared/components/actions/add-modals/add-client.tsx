@@ -6,8 +6,9 @@ export default function AddClientModal() {
 	const [replicas, setReplicas] = createSignal(1);
 	const [networkAddress, setNetworkAddress] = createSignal("");
 	const [networkName, setNetworkName] = createSignal("");
+	const [existingNetworks, setExistingNetworks] = createSignal({});
 
-	const { addNewClientInstance } = configManager;
+	const { addNewClientInstance, getExistingNetworks } = configManager;
 
 	async function addNewClient() {
 		if (await addNewClientInstance(name(), networkAddress(), replicas())) {
@@ -18,6 +19,18 @@ export default function AddClientModal() {
 			setNetworkName("");
 		}
 	}
+
+	async function getExistingNetworksMap() {
+		try {
+			const result: any = await getExistingNetworks();
+			setExistingNetworks(result);
+		} catch (error) {
+			console.error("Error fetching existing networks:", error);
+			setExistingNetworks(new Map());
+		}
+	}
+
+	getExistingNetworksMap();
 
 	return (
 		<div class="flex flex-col gap-y-1">
@@ -47,26 +60,30 @@ export default function AddClientModal() {
 					value={networkName()}
 					onChange={(e: Event) => {
 						// @ts-ignore
+
 						const val = e?.target?.value;
-						if (val) {
+
+						if (val && val !== "") {
 							setNetworkName(val);
-							if (val !== "") {
-								document
-									.getElementById("clientNetworkName")
-									?.classList.replace("hidden", "flex");
-							} else {
-								document
-									.getElementById("clientNetworkName")
-									?.classList.replace("flex", "hidden");
-							}
+							document
+								.getElementById("clientNetworkName")
+								?.classList.replace("hidden", "flex");
+						} else {
+							setNetworkName("");
+							document
+								.getElementById("clientNetworkName")
+								?.classList.replace("flex", "hidden");
 						}
 					}}
 				>
 					<option selected value=""></option>
-					<option value="node-app">Node App</option>
-					<option value="client">Client</option>
-					<option value="router">Router</option>
-					<option value="nginx">Nginx</option>
+					{Object.entries(existingNetworks()).length === 0 ? (
+						<option disabled>No networks available</option>
+					) : (
+						Object.entries(existingNetworks()).map(([key]) => (
+							<option value={key}>{key}</option>
+						))
+					)}
 				</select>
 			</div>
 			<label

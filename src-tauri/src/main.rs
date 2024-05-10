@@ -8,6 +8,8 @@ mod manager;
 mod state;
 mod utils;
 
+use std::collections::HashMap;
+
 use config::network_data::NetworkData;
 use config::ComposeConfig;
 use docker::dockerstats::DockerStats;
@@ -164,6 +166,14 @@ async fn get_container_stats(
     app_handle.manager(|man| man.get_config_docker_stats(config_name, &app_handle))
 }
 
+#[tauri::command]
+async fn get_existing_networks(
+    config_name: String,
+    app_handle: AppHandle,
+) -> Result<HashMap<String, NetworkData>, String> {
+    app_handle.manager_mut(|man| man.get_existing_networks(config_name))
+}
+
 fn main() {
     tauri::Builder::default()
         .manage(AppState {
@@ -181,6 +191,7 @@ fn main() {
             get_instances,
             start_config_docker,
             get_container_stats,
+			get_existing_networks,
         ])
         .setup(|app| {
             let handle = app.handle();

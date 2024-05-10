@@ -276,6 +276,18 @@ function createConfigManager() {
 
 	}
 
+	const getExistingNetworks = async () => {
+		try {
+			let result: any[] = await invoke("get_existing_networks", {
+				configName: configName(),
+			});
+
+			return result;
+		} catch (err) {
+			console.log("Stats fetch failed:", err);
+		}
+	}
+
 	return {
 		getConfigsList, createNewConfig,
 		getSelectedConfig, setSelectedConfig,
@@ -284,6 +296,7 @@ function createConfigManager() {
 		addNewNodeAppInstance, addNewClientInstance, addNewNginxInstance, addNewRouterInstance,
 		addNewNetworkToConfig,
 		getContainerStats,
+		getExistingNetworks
 	};
 }
 
