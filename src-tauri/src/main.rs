@@ -10,6 +10,8 @@ mod utils;
 
 use std::collections::HashMap;
 
+use std::collections::VecDeque;
+
 use config::network_data::NetworkData;
 use config::ComposeConfig;
 use docker::dockerstats::DockerStats;
@@ -176,10 +178,10 @@ fn start_config_docker(config_name: String, app_handle: AppHandle) -> Result<(),
 
 #[tauri::command]
 async fn get_container_stats(
-    config_name: String,
+    instance_name: String,
     app_handle: AppHandle,
-) -> Result<Vec<DockerStats>, String> {
-    app_handle.manager(|man| man.get_config_docker_stats(config_name, &app_handle))
+) -> Result<Vec<VecDeque<DockerStats>>, String> {
+    app_handle.manager(|man| man.get_instance_docker_stats(instance_name))
 }
 
 #[tauri::command]

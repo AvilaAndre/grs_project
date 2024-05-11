@@ -22,6 +22,7 @@
   "devDependencies": {
     "@tauri-apps/cli": "^1",
     "@types/netmask": "^2.0.5",
+    "@types/d3": "^7.4.3",
     "autoprefixer": "^10.4.19",
     "daisyui": "^4.10.2",
     "postcss": "^8.4.38",

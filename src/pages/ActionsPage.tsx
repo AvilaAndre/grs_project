@@ -9,7 +9,7 @@ export default function ActionsPage(props: any) {
 	const config_name = props.params.id
 	const [gettingStats, setGettingStats] = createSignal(false);
 
-	const { setSelectedConfig, getContainerStats } = configManager;
+	const { setSelectedConfig } = configManager;
 
 	async function startConfigDocker() {
 		console.log(await invoke("start_config_docker", { configName: config_name }));

@@ -1,8 +1,8 @@
 import { Match, Switch } from "solid-js";
-import configManager from "../../../stores/config-manager";
+import configManager, { InstanceData } from "../../../stores/config-manager";
 
 export default function InstanceInfoCard(props: any) {
-	const instance = props.instance;
+	const instance: InstanceData = props.instance;
 
 	const { unselectInstance } = configManager;
 
