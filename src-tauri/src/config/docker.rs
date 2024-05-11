@@ -224,7 +224,7 @@ pub fn write_router_instance(
 				}).collect::<String>();
 
                 let item = format!(
-				  	"{indent}{key}:\n{indent}  build: {image}\n{indent}  container_name: {key}\n{indent}  hostname: {key}\n{indent}  networks:\n{networks}\n",
+				  	"{indent}{key}:\n{indent}  build: {image}\n{indent}  hostname: {key}\n{indent}  networks:\n{networks}\n",
 					indent = " ".repeat(indentation),
 					image = "./images/baseimage",
 					key = key,

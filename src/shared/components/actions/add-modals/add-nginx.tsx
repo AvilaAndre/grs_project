@@ -29,6 +29,19 @@ export default function AddNginxModal() {
 		}
 	}
 
+	function showOrHideNetworkAddressDiv() {
+		const elem = document.getElementById("nginxNetworkAddress");
+
+		if (networkName() === "") {
+			elem?.classList.add("hidden");
+			elem?.classList.remove("flex");
+			setNetworkAddress("");
+		} else {
+			elem?.classList.add("flex");
+			elem?.classList.remove("hidden");
+		}
+	}
+
 	setExistingNetworksMap(setExistingNetworks);
 
 	return (
@@ -104,17 +117,13 @@ export default function AddNginxModal() {
 						if (val && subnet && val !== "") {
 							setNetworkName(val);
 							setSubnet(subnet);
-							document
-								.getElementById("nginxNetworkAddress")
-								?.classList.replace("hidden", "flex");
 						} else {
 							setNetworkName("");
 							setSubnet("");
 							setNetworkAddress("");
-							document
-								.getElementById("nginxNetworkAddress")
-								?.classList.replace("flex", "hidden");
 						}
+
+						showOrHideNetworkAddressDiv();
 					}}
 				>
 					<option selected value=""></option>

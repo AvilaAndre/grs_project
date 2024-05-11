@@ -15,12 +15,32 @@ export default function AddNodeAppModal() {
 	const { addNewNodeAppInstance, setExistingNetworksMap } = configManager;
 
 	async function addNewNode() {
-		if (await addNewNodeAppInstance(name(), networkName(), networkAddress(), replicas())) {
+		if (
+			await addNewNodeAppInstance(
+				name(),
+				networkName(),
+				networkAddress(),
+				replicas()
+			)
+		) {
 			//reset
 			setName("");
 			setReplicas(1);
 			setNetworkName("");
 			setNetworkAddress("");
+		}
+	}
+
+	function showOrHideNetworkAddressDiv() {
+		const elem = document.getElementById("nodeAppNetworkAddress");
+
+		if (networkName() === "" || replicas() > 1) {
+			elem?.classList.add("hidden");
+			elem?.classList.remove("flex");
+			setNetworkAddress("");
+		} else {
+			elem?.classList.add("flex");
+			elem?.classList.remove("hidden");
 		}
 	}
 
@@ -45,6 +65,26 @@ export default function AddNodeAppModal() {
 					placeholder="NodeApp"
 				/>
 			</label>
+			<label class="input input-bordered flex items-center gap-2">
+				Replicas
+				<input
+					type="number"
+					value={replicas()}
+					onChange={(e: Event) => {
+						// @ts-ignore
+						let val = e?.target?.value;
+						val = parseInt(val);
+
+						if (val) setReplicas(val);
+
+						showOrHideNetworkAddressDiv();
+					}}
+					class="grow"
+					placeholder="1"
+					min="1"
+					step="1"
+				/>
+			</label>
 			<div class="flex">
 				<label class="input input-bordered flex items-center gap-2 w-52 mr-1">
 					Network Name
@@ -60,20 +100,16 @@ export default function AddNodeAppModal() {
 							.getElementById("network_name_" + val)
 							?.getAttribute("data-subnet");
 
-						if (val && subnet && val !== "") {
+						if (val && subnet) {
 							setNetworkName(val);
 							setSubnet(subnet);
-							document
-								.getElementById("nodeAppNetworkAddress")
-								?.classList.replace("hidden", "flex");
 						} else {
 							setNetworkName("");
 							setSubnet("");
 							setNetworkAddress("");
-							document
-								.getElementById("nodeAppNetworkAddress")
-								?.classList.replace("flex", "hidden");
 						}
+
+						showOrHideNetworkAddressDiv();
 					}}
 				>
 					<option selected value=""></option>
@@ -126,24 +162,6 @@ export default function AddNodeAppModal() {
 					}}
 					class="grow"
 					placeholder="172.16.123.66"
-				/>
-			</label>
-			<label class="input input-bordered flex items-center gap-2">
-				Replicas
-				<input
-					type="number"
-					value={replicas()}
-					onChange={(e: Event) => {
-						// @ts-ignore
-						let val = e?.target?.value;
-						val = parseInt(val);
-
-						if (val) setReplicas(val);
-					}}
-					class="grow"
-					placeholder="1"
-					min="1"
-					step="1"
 				/>
 			</label>
 			<div class="modal-action">

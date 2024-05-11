@@ -13,12 +13,32 @@ export default function AddClientModal() {
 	const { addNewClientInstance, setExistingNetworksMap } = configManager;
 
 	async function addNewClient() {
-		if (await addNewClientInstance(name(), networkAddress(), networkName(), replicas())) {
+		if (
+			await addNewClientInstance(
+				name(),
+				networkAddress(),
+				networkName(),
+				replicas()
+			)
+		) {
 			//reset
 			setName("");
 			setReplicas(1);
 			setNetworkAddress("");
 			setNetworkName("");
+		}
+	}
+
+	function showOrHideNetworkAddressDiv() {
+		const elem = document.getElementById("clientNetworkAddress");
+
+		if (networkName() === "" || replicas() > 1) {
+			elem?.classList.add("hidden");
+			elem?.classList.remove("flex");
+			setNetworkAddress("");
+		} else {
+			elem?.classList.add("flex");
+			elem?.classList.remove("hidden");
 		}
 	}
 
@@ -43,6 +63,26 @@ export default function AddClientModal() {
 					placeholder="Client"
 				/>
 			</label>
+			<label class="input input-bordered flex items-center gap-2">
+				Replicas
+				<input
+					type="number"
+					value={replicas()}
+					onChange={(e: Event) => {
+						// @ts-ignore
+						let val = e?.target?.value;
+						val = parseInt(val);
+
+						if (val) setReplicas(val);
+
+						showOrHideNetworkAddressDiv();
+					}}
+					class="grow"
+					placeholder="1"
+					min="1"
+					step="1"
+				/>
+			</label>
 			<div class="flex">
 				<label class="input input-bordered flex items-center gap-2 w-52 mr-1">
 					Network Name
@@ -61,17 +101,13 @@ export default function AddClientModal() {
 						if (val && subnet && val !== "") {
 							setNetworkName(val);
 							setSubnet(subnet);
-							document
-								.getElementById("clientNetworkAddress")
-								?.classList.replace("hidden", "flex");
 						} else {
 							setNetworkName("");
 							setSubnet("");
 							setNetworkAddress("");
-							document
-								.getElementById("clientNetworkAddress")
-								?.classList.replace("flex", "hidden");
 						}
+
+						showOrHideNetworkAddressDiv();
 					}}
 				>
 					<option selected value=""></option>
@@ -121,28 +157,9 @@ export default function AddClientModal() {
 								elem.add("input-success");
 							}
 						}
-
 					}}
 					class="grow"
 					placeholder="172.16.123.66"
-				/>
-			</label>
-			<label class="input input-bordered flex items-center gap-2">
-				Replicas
-				<input
-					type="number"
-					value={replicas()}
-					onChange={(e: Event) => {
-						// @ts-ignore
-						let val = e?.target?.value;
-						val = parseInt(val);
-
-						if (val) setReplicas(val);
-					}}
-					class="grow"
-					placeholder="1"
-					min="1"
-					step="1"
 				/>
 			</label>
 			<div class="modal-action">
