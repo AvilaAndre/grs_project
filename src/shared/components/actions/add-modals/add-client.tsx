@@ -67,6 +67,7 @@ export default function AddClientModal() {
 						} else {
 							setNetworkName("");
 							setSubnet("");
+							setNetworkAddress("");
 							document
 								.getElementById("clientNetworkAddress")
 								?.classList.replace("flex", "hidden");

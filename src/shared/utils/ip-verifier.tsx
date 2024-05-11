@@ -10,7 +10,7 @@ function verifyIP(subnet: string, ip_address: string) {
 	if (subnet === "") {
 		return true;
 	}
-
+	// TODO verificar se o IP já está ocupado na rede especificada
 	try {
 		const block = new Netmask(subnet);
 		if (block) {

@@ -90,7 +90,10 @@ fn add_client_instance_to_config(
         )
     })
 }
-
+/**
+ * invalid args `networkAddress` for command `add_nginx_instance_to_config`: 
+ * command add_nginx_instance_to_config missing required key networkAddress
+ */
 #[tauri::command]
 fn add_nginx_instance_to_config(
     config_name: String,

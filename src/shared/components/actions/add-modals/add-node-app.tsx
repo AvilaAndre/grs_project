@@ -64,13 +64,14 @@ export default function AddNodeAppModal() {
 							setNetworkName(val);
 							setSubnet(subnet);
 							document
-								.getElementById("clientNetworkAddress")
+								.getElementById("nodeAppNetworkAddress")
 								?.classList.replace("hidden", "flex");
 						} else {
 							setNetworkName("");
 							setSubnet("");
+							setNetworkAddress("");
 							document
-								.getElementById("clientNetworkAddress")
+								.getElementById("nodeAppNetworkAddress")
 								?.classList.replace("flex", "hidden");
 						}
 					}}
@@ -95,7 +96,7 @@ export default function AddNodeAppModal() {
 			</div>
 			<label
 				class="input input-bordered items-center gap-2 hidden"
-				id="clientNetworkAddress"
+				id="nodeAppNetworkAddress"
 			>
 				Network Address
 				<input
@@ -110,7 +111,7 @@ export default function AddNodeAppModal() {
 						setNetworkAddress(val);
 
 						const elem = document.getElementById(
-							"clientNetworkAddress"
+							"nodeAppNetworkAddress"
 						)?.classList;
 
 						if (elem) {

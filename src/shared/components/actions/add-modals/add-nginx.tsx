@@ -105,13 +105,14 @@ export default function AddNginxModal() {
 							setNetworkName(val);
 							setSubnet(subnet);
 							document
-								.getElementById("clientNetworkAddress")
+								.getElementById("nginxNetworkAddress")
 								?.classList.replace("hidden", "flex");
 						} else {
 							setNetworkName("");
 							setSubnet("");
+							setNetworkAddress("");
 							document
-								.getElementById("clientNetworkAddress")
+								.getElementById("nginxNetworkAddress")
 								?.classList.replace("flex", "hidden");
 						}
 					}}
@@ -136,7 +137,7 @@ export default function AddNginxModal() {
 			</div>
 			<label
 				class="input input-bordered items-center gap-2 hidden"
-				id="clientNetworkAddress"
+				id="nginxNetworkAddress"
 			>
 				Network Address
 				<input
@@ -151,7 +152,7 @@ export default function AddNginxModal() {
 						setNetworkAddress(val);
 
 						const elem = document.getElementById(
-							"clientNetworkAddress"
+							"nginxNetworkAddress"
 						)?.classList;
 
 						if (elem) {

@@ -210,8 +210,8 @@ function createConfigManager() {
 		memoryLimit: string,
 		cpusLimit: string,
 		memoryReservations: string,
-		network_address: string,
-		network_name: string,
+		networkAddress: string,
+		networkName: string,
 	): Promise<boolean> => {
 		let result = await invoke("add_nginx_instance_to_config", {
 			configName: configName(),
@@ -219,8 +219,8 @@ function createConfigManager() {
 			memoryLimit,
 			cpusLimit,
 			memoryReservations,
-			network_address,
-			network_name
+			networkAddress,
+			networkName
 		})
 			.then((add) => {
 				if (!add)
