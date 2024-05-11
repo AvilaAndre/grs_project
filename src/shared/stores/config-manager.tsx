@@ -243,11 +243,15 @@ function createConfigManager() {
 	};
 
 	const addNewRouterInstance = async (
-		instanceName: string
+		instanceName: string,
+		networkAddress: string,
+		networkName: string
 	): Promise<boolean> => {
 		let result = await invoke("add_router_instance_to_config", {
 			configName: configName(),
 			instanceName,
+			networkAddress,
+			networkName
 		})
 			.then((add) => {
 				if (!add)

@@ -216,20 +216,27 @@ pub fn write_router_instance(
             file.write_all(b"\n## Router Instances\n")?;
 
             for (key, value) in map {
-                let networks_string = value.networks.iter().map(|network| {
-					format!("{indent}    {network_name}:\n{indent}      ipv4_address: {network_address}\n",
-							indent = " ".repeat(indentation),
-							network_name = network.network_name, 
-							network_address = network.ipv4_address)
-				}).collect::<String>();
 
-                let item = format!(
-				  	"{indent}{key}:\n{indent}  build: {image}\n{indent}  hostname: {key}\n{indent}  networks:\n{networks}\n",
+                let mut item = format!(
+				  	"{indent}{key}:\n{indent}  build: {image}\n{indent}  hostname: {key}\n",
 					indent = " ".repeat(indentation),
 					image = "./images/baseimage",
-					key = key,
-					networks = networks_string
+					key = key
 				);
+
+				if value.networks.len() > 0 {
+					let networks_string = value.networks.iter().map(|network| {
+						format!("{indent}    {network_name}:\n{indent}      ipv4_address: {network_address}\n",
+								indent = " ".repeat(indentation),
+								network_name = network.network_name, 
+								network_address = network.ipv4_address)
+					}).collect::<String>();
+
+					item += &format!("{indent}  networks:\n{networks}\n", indent=" ".repeat(indentation), networks = networks_string);
+				} else {
+					item += "\n";
+				}
+				
                 file.write_all(item.as_bytes())?;
             }
         }

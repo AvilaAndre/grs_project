@@ -16,6 +16,7 @@ use docker::dockerstats::DockerStats;
 use docker::watcher::watch_containers;
 use instances::nginx::NginxInstance;
 use instances::router::RouterInstance;
+use instances::types::NetworkData as NetworkInfo;
 use instances::Instance;
 use instances::{client::ClientInstance, nodeapp::NodeAppInstance};
 use manager::ConfigManager;
@@ -121,17 +122,22 @@ fn add_nginx_instance_to_config(
     })
 }
 
+// Para criar uma instancia basta uma rede nos argumentos, depois é transformado em vetor
 #[tauri::command]
 fn add_router_instance_to_config(
     config_name: String,
     instance_name: String,
+	network_address: String,
+	network_name: String,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
+	let net_data = NetworkInfo {network_name: network_name, ipv4_address: network_address};
+
     app_handle.manager_mut(|man| {
         man.add_instance_to_config(
             config_name,
             instance_name,
-            Instance::Router(RouterInstance { networks: vec![] }),
+            Instance::Router(RouterInstance { networks: vec![net_data] }),
             &app_handle,
         )
     })
