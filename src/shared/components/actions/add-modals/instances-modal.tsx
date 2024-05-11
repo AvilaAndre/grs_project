@@ -7,7 +7,6 @@ import AddRouterModal from "./add-router";
 export default function InstancesModal() {
 	const [instanceOption, setInstanceOption] = createSignal("");
 
-
 	return (
 		<dialog id="instances_modal" class="modal">
 			<div class="modal-box">

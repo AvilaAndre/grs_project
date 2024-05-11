@@ -49,7 +49,8 @@ fn get_configs(app_handle: AppHandle) -> Vec<String> {
 fn add_nodeapp_instance_to_config(
     config_name: String,
     instance_name: String,
-    network_names: Vec<String>,
+    network_name: String,
+	network_address: String,
     replicas: u8,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
@@ -58,7 +59,8 @@ fn add_nodeapp_instance_to_config(
             config_name,
             instance_name,
             Instance::NodeApp(NodeAppInstance {
-                network_names,
+				network_address,
+                network_name,
                 replicas: if replicas <= 1 { 1 } else { replicas },
             }),
             &app_handle,
@@ -70,6 +72,7 @@ fn add_nodeapp_instance_to_config(
 fn add_client_instance_to_config(
     config_name: String,
     instance_name: String,
+	network_address: String,
     network_name: String,
     replicas: u8,
     app_handle: AppHandle,
@@ -79,6 +82,7 @@ fn add_client_instance_to_config(
             config_name,
             instance_name,
             Instance::Client(ClientInstance {
+				network_address,
                 network_name,
                 replicas: if replicas <= 1 { 1 } else { replicas },
             }),
@@ -94,6 +98,8 @@ fn add_nginx_instance_to_config(
     memory_limit: String,
     cpus_limit: String,
     memory_reservations: String,
+	network_address: String,
+	network_name: String,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
     app_handle.manager_mut(|man| {
@@ -101,7 +107,8 @@ fn add_nginx_instance_to_config(
             config_name,
             instance_name,
             Instance::Nginx(NginxInstance {
-                networks: Vec::new(),
+                network_address,
+                network_name,
                 memory_limit,
                 cpus_limit,
                 memory_reservations,

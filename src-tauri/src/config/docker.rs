@@ -42,17 +42,11 @@ pub fn write_node_app_instance(
             file.write_all(b"\n## NodeApp Instances\n")?;
 
             for (key, value) in map {
-                let networks_string = value
-                    .network_names
-                    .iter()
-                    .map(|name| {
-                        format!(
-                            "{indent}    - {network_name}\n",
-                            indent = " ".repeat(indentation),
-                            network_name = name
-                        )
-                    })
-                    .collect::<String>();
+                let networks_string = format!(
+					"{indent}    - {network_name}\n",
+					indent = " ".repeat(indentation),
+					network_name = value.network_name
+                );
 
                 let mut item = format!(
                     "{indent}{name}:\n{indent}  build: {image}\n{indent}  environment:\n{indent}    - PORT=5050\n{indent}  deploy:\n{indent}    replicas: {replicas}\n",
@@ -62,7 +56,7 @@ pub fn write_node_app_instance(
 					replicas = value.replicas,
 				);
 
-                if value.network_names.len() > 0 {
+                if value.network_name.len() > 0 {
                     item = item.clone() + format!("{indent}  networks:\n{networks}\n",
                         indent = " ".repeat(indentation),
 			            networks = networks_string,
@@ -169,7 +163,7 @@ pub fn write_nginx_instance(
 					cpus_limit = value.cpus_limit,
 					memory_limit = value.memory_limit,
 					memory_reservations = value.memory_reservations,
-                    network_address = value.networks[0].ipv4_address, // TODO: should be able to have more than one network
+                    network_address = value.network_address, // TODO: should be able to have more than one network
 					network_name = key //TODO: mudar para o nome da network
 				);
                 file.write_all(item.as_bytes())?;

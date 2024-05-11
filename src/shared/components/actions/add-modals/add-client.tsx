@@ -10,10 +10,10 @@ export default function AddClientModal() {
 	const [subnet, setSubnet] = createSignal("");
 	const [existingNetworks, setExistingNetworks] = createSignal({});
 
-	const { addNewClientInstance, getExistingNetworks } = configManager;
+	const { addNewClientInstance, setExistingNetworksMap } = configManager;
 
 	async function addNewClient() {
-		if (await addNewClientInstance(name(), networkAddress(), replicas())) {
+		if (await addNewClientInstance(name(), networkAddress(), networkName(), replicas())) {
 			//reset
 			setName("");
 			setReplicas(1);
@@ -22,17 +22,7 @@ export default function AddClientModal() {
 		}
 	}
 
-	async function getExistingNetworksMap() {
-		try {
-			const result: any = await getExistingNetworks();
-			setExistingNetworks(result);
-		} catch (error) {
-			console.error("Error fetching existing networks:", error);
-			setExistingNetworks(new Map());
-		}
-	}
-
-	getExistingNetworksMap();
+	setExistingNetworksMap(setExistingNetworks);
 
 	return (
 		<div class="flex flex-col gap-y-1">
