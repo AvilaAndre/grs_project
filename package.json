@@ -15,11 +15,13 @@
     "@solidjs/router": "^0.13.2",
     "@tauri-apps/api": "^1",
     "d3": "^7.9.0",
+    "netmask": "^2.0.2",
     "solid-js": "^1.7.8",
     "solid-toast": "^0.5.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1",
+    "@types/netmask": "^2.0.5",
     "autoprefixer": "^10.4.19",
     "daisyui": "^4.10.2",
     "postcss": "^8.4.38",

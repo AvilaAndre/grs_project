@@ -1,11 +1,13 @@
 import { createSignal } from "solid-js";
 import configManager from "../../../stores/config-manager";
+import verifyIP from "../../../utils/ip-verifier";
 
 export default function AddClientModal() {
 	const [name, setName] = createSignal("");
 	const [replicas, setReplicas] = createSignal(1);
 	const [networkAddress, setNetworkAddress] = createSignal("");
 	const [networkName, setNetworkName] = createSignal("");
+	const [subnet, setSubnet] = createSignal("");
 	const [existingNetworks, setExistingNetworks] = createSignal({});
 
 	const { addNewClientInstance, getExistingNetworks } = configManager;
@@ -62,16 +64,21 @@ export default function AddClientModal() {
 						// @ts-ignore
 
 						const val = e?.target?.value;
+						const subnet = document
+							.getElementById("network_name_" + val)
+							?.getAttribute("data-subnet");
 
-						if (val && val !== "") {
+						if (val && subnet && val !== "") {
 							setNetworkName(val);
+							setSubnet(subnet);
 							document
-								.getElementById("clientNetworkName")
+								.getElementById("clientNetworkAddress")
 								?.classList.replace("hidden", "flex");
 						} else {
 							setNetworkName("");
+							setSubnet("");
 							document
-								.getElementById("clientNetworkName")
+								.getElementById("clientNetworkAddress")
 								?.classList.replace("flex", "hidden");
 						}
 					}}
@@ -80,15 +87,23 @@ export default function AddClientModal() {
 					{Object.entries(existingNetworks()).length === 0 ? (
 						<option disabled>No networks available</option>
 					) : (
-						Object.entries(existingNetworks()).map(([key]) => (
-							<option value={key}>{key}</option>
-						))
+						Object.entries(existingNetworks()).map(
+							([key, value]: any) => (
+								<option
+									id={"network_name_" + key}
+									value={key}
+									data-subnet={value.subnet}
+								>
+									{key}
+								</option>
+							)
+						)
 					)}
 				</select>
 			</div>
 			<label
 				class="input input-bordered items-center gap-2 hidden"
-				id="clientNetworkName"
+				id="clientNetworkAddress"
 			>
 				Network Address
 				<input
@@ -101,6 +116,21 @@ export default function AddClientModal() {
 						val = val.replace(" ", "");
 
 						setNetworkAddress(val);
+
+						const elem = document.getElementById(
+							"clientNetworkAddress"
+						)?.classList;
+
+						if (elem) {
+							if (!verifyIP(subnet(), networkAddress())) {
+								elem.add("input-error");
+								elem.remove("input-success");
+							} else {
+								elem.remove("input-error");
+								elem.add("input-success");
+							}
+						}
+
 					}}
 					class="grow"
 					placeholder="172.16.123.66"
@@ -130,8 +160,10 @@ export default function AddClientModal() {
 						class="btn"
 						disabled={
 							!name().length ||
-							!(!networkAddress().length || !networkName().length)
-						} //(networkAddress().length && networkName().length) --- escrevendo assim dava erro, por isso, usar regra de De Morgan
+							!(networkAddress()
+								? verifyIP(subnet(), networkAddress())
+								: true)
+						}
 					>
 						Add Instance
 					</button>
