@@ -4,11 +4,10 @@ pub mod network_data;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::{self, File};
-use std::io::{BufRead, Write};
+use std::io::Write;
 use std::process::Command;
 use tauri::AppHandle;
 
-use crate::docker::dockerstats::DockerStats;
 use crate::instances::client::ClientInstance;
 use crate::instances::nginx::NginxInstance;
 use crate::instances::nodeapp::NodeAppInstance;
@@ -142,36 +141,5 @@ impl ComposeConfig {
         // check if really successful
 
         true
-    }
-
-    pub fn get_stats(&self, app_handle: &AppHandle) -> Result<Vec<DockerStats>, String> {
-        let app_dir = app_handle
-            .path_resolver()
-            .app_data_dir()
-            .expect("The app data directory should exist.");
-
-        let output = Command::new("docker")
-            .current_dir(app_dir)
-            .arg("compose")
-            .arg("-f")
-            .arg(self.name.clone() + ".yml")
-            .arg("stats")
-            .arg("--no-stream")
-            .arg("--format")
-            .arg("json")
-            .output()
-            .expect("Failed to execute command");
-
-        let lines = output.stdout.lines();
-
-        let mut stats: Vec<DockerStats> = Vec::new();
-
-        for line in lines {
-            let line = line.unwrap();
-
-            stats.push(serde_json::from_str(&line).unwrap())
-        }
-
-        return Ok(stats);
     }
 }

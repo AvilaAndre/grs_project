@@ -321,24 +321,34 @@ impl ConfigManager {
         Ok(())
     }
 
-    pub fn get_config_docker_stats(
+    pub fn get_instance_docker_stats(
         &self,
-        config_name: String,
-        app_handle: &AppHandle,
-    ) -> Result<Vec<DockerStats>, String> {
-        let config: &ComposeConfig = match self.configs.get(&config_name) {
-            Some(c) => c,
-            None => return Err("Failed to find the configuration.".to_string()),
-        };
+        instance_name: String,
+    ) -> Result<Vec<VecDeque<DockerStats>>, String> {
+        let mut res: Vec<VecDeque<DockerStats>> = Vec::new();
 
-        config.get_stats(app_handle)
+        for stat_key in self.stats_recorded.keys() {
+            if stat_key.contains(&instance_name) {
+                let docker_stats: Option<&VecDeque<DockerStats>> =
+                    self.stats_recorded.get(stat_key);
+                if docker_stats.is_some() {
+                    let mut to_push: VecDeque<DockerStats> = VecDeque::new();
+                    for stat in docker_stats.unwrap() {
+                        to_push.push_back(stat.clone());
+                    }
+                    res.push(to_push);
+                }
+            }
+        }
+
+        Ok(res)
     }
 
     pub fn add_new_docker_stats(&mut self, stats: DockerStats) {
         match self.stats_recorded.get_mut(&stats.name) {
             Some(deque) => {
                 if deque.len() == STATS_CAPACITY {
-                    deque.remove(0);
+                    deque.pop_front();
                 }
                 deque.push_back(stats);
             }

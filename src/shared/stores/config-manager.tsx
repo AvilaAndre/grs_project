@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api";
 import { createRoot, createSignal } from "solid-js";
 import toast from "solid-toast";
 
-type DockerStats = {
+export type DockerStats = {
 	BlockIO: string,
 	CPUPerc: string,
 	ID: string,
@@ -247,31 +247,16 @@ function createConfigManager() {
 		return result;
 	}
 
-	const getContainerStats = async () => {
-		return
+	const getContainerStats = async (instanceName: string): Promise<DockerStats[][]> => {
 		try {
-			let result: DockerStats[] = await invoke("get_container_stats", {
-				configName: configName(),
+			let result: DockerStats[][] = await invoke("get_container_stats", {
+				instanceName: instanceName,
 			});
 
-			const instNum = instancesUpdateNum;
-			let insts = instances();
-			for (let i = 0; i < result.length; i++) {
-				let result_name = result[i].Name.slice(0, 14) == 'comnetkingdev-' ? result[i].Name.slice(14) : result[i].Name
-				result_name = result_name.slice(0, result_name.match('-')?.index);
-				for (let j = 0; j < insts.length; j++) {
-					if (insts[j].name == result_name) {
-						break
-					}
-				}
-			}
-
-			if (instNum == instancesUpdateNum)
-				setInstancesWrapper(insts)
-
-
+			return result
 		} catch (err) {
-			console.log("Stats fetch failed:", err);
+			console.error("Stats fetch failed:", err);
+			return [];
 		}
 
 	}
