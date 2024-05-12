@@ -363,4 +363,19 @@ impl ConfigManager {
             }
         }
     }
+
+	pub fn get_existing_networks(&mut self, config_name: String) -> Result<HashMap<String, NetworkData>, String> {
+		let config: &ComposeConfig = match self.configs.get(&config_name) {
+            Some(c) => c,
+            None => return Err("Failed to find the configuration.".to_string()),
+        };
+
+		let mut final_map = HashMap::new();
+
+		if !config.networks.is_none() {
+            final_map = config.networks.as_ref().unwrap().clone();
+        }
+
+		Ok(final_map)
+	}
 }

@@ -8,6 +8,8 @@ mod manager;
 mod state;
 mod utils;
 
+use std::collections::HashMap;
+
 use std::collections::VecDeque;
 
 use config::network_data::NetworkData;
@@ -16,6 +18,7 @@ use docker::dockerstats::DockerStats;
 use docker::watcher::watch_containers;
 use instances::nginx::NginxInstance;
 use instances::router::RouterInstance;
+use instances::types::NetworkData as NetworkInfo;
 use instances::Instance;
 use instances::{client::ClientInstance, nodeapp::NodeAppInstance};
 use manager::ConfigManager;
@@ -49,7 +52,8 @@ fn get_configs(app_handle: AppHandle) -> Vec<String> {
 fn add_nodeapp_instance_to_config(
     config_name: String,
     instance_name: String,
-    network_names: Vec<String>,
+    network_name: String,
+	network_address: String,
     replicas: u8,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
@@ -58,7 +62,8 @@ fn add_nodeapp_instance_to_config(
             config_name,
             instance_name,
             Instance::NodeApp(NodeAppInstance {
-                network_names,
+				network_address,
+                network_name,
                 replicas: if replicas <= 1 { 1 } else { replicas },
             }),
             &app_handle,
@@ -70,6 +75,7 @@ fn add_nodeapp_instance_to_config(
 fn add_client_instance_to_config(
     config_name: String,
     instance_name: String,
+	network_address: String,
     network_name: String,
     replicas: u8,
     app_handle: AppHandle,
@@ -79,6 +85,7 @@ fn add_client_instance_to_config(
             config_name,
             instance_name,
             Instance::Client(ClientInstance {
+				network_address,
                 network_name,
                 replicas: if replicas <= 1 { 1 } else { replicas },
             }),
@@ -86,7 +93,10 @@ fn add_client_instance_to_config(
         )
     })
 }
-
+/**
+ * invalid args `networkAddress` for command `add_nginx_instance_to_config`: 
+ * command add_nginx_instance_to_config missing required key networkAddress
+ */
 #[tauri::command]
 fn add_nginx_instance_to_config(
     config_name: String,
@@ -94,6 +104,8 @@ fn add_nginx_instance_to_config(
     memory_limit: String,
     cpus_limit: String,
     memory_reservations: String,
+	network_address: String,
+	network_name: String,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
     app_handle.manager_mut(|man| {
@@ -101,7 +113,8 @@ fn add_nginx_instance_to_config(
             config_name,
             instance_name,
             Instance::Nginx(NginxInstance {
-                networks: Vec::new(),
+                network_address,
+                network_name,
                 memory_limit,
                 cpus_limit,
                 memory_reservations,
@@ -111,17 +124,22 @@ fn add_nginx_instance_to_config(
     })
 }
 
+// Para criar uma instancia basta uma rede nos argumentos, depois é transformado em vetor
 #[tauri::command]
 fn add_router_instance_to_config(
     config_name: String,
     instance_name: String,
+	network_address: String,
+	network_name: String,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
+	let net_data = NetworkInfo {network_name: network_name, ipv4_address: network_address};
+
     app_handle.manager_mut(|man| {
         man.add_instance_to_config(
             config_name,
             instance_name,
-            Instance::Router(RouterInstance { networks: vec![] }),
+            Instance::Router(RouterInstance { networks: vec![net_data] }),
             &app_handle,
         )
     })
@@ -166,6 +184,14 @@ async fn get_container_stats(
     app_handle.manager(|man| man.get_instance_docker_stats(instance_name))
 }
 
+#[tauri::command]
+async fn get_existing_networks(
+    config_name: String,
+    app_handle: AppHandle,
+) -> Result<HashMap<String, NetworkData>, String> {
+    app_handle.manager_mut(|man| man.get_existing_networks(config_name))
+}
+
 fn main() {
     tauri::Builder::default()
         .manage(AppState {
@@ -183,6 +209,7 @@ fn main() {
             get_instances,
             start_config_docker,
             get_container_stats,
+			get_existing_networks,
         ])
         .setup(|app| {
             let handle = app.handle();
