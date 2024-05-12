@@ -124,13 +124,37 @@ impl ComposeConfig {
             .app_data_dir()
             .expect("The app data directory should exist.");
 
+        let _prune = Command::new("docker")
+            .current_dir(app_dir.clone())
+            .arg("network")
+            .arg("prune")
+            .arg("-f")
+            .output()
+            .expect("Failed to execute command");
+
+        let _down = Command::new("docker")
+            .current_dir(app_dir.clone())
+            .arg("compose")
+            .arg("-f")
+            .arg(self.name.clone() + ".yml")
+            .arg("down")
+            .arg("--remove-orphans")
+            .arg("-d")
+            .arg("--rmi")
+            .arg("all")
+            .output()
+            .expect("Failed to execute command");
+
         let output = Command::new("docker")
             .current_dir(app_dir)
             .arg("compose")
             .arg("-f")
             .arg(self.name.clone() + ".yml")
             .arg("up")
+            .arg("--remove-orphans")
             .arg("-d")
+            .arg("--no-log-prefix")
+            .arg("--quiet-pull")
             .output()
             .expect("Failed to execute command");
 
