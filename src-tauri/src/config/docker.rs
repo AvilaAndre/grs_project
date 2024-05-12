@@ -112,7 +112,7 @@ pub fn write_client_instance(
 
             for (key, value) in map {
                 let mut item = format!(
-                   "{indent}{key}:\n{indent}  build: {image}\n{indent}  container_name: {key}\n{indent}  deploy:\n{indent}    replicas: {replicas}\n{indent}  tty: true\n",
+                   "{indent}{key}:\n{indent}  build: {image}\n{indent}  deploy:\n{indent}    replicas: {replicas}\n{indent}  tty: true\n",
                     indent = " ".repeat(indentation),
 					key = key,
 					image = "./images/baseimage", 
