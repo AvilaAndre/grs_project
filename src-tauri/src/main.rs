@@ -53,7 +53,7 @@ fn add_nodeapp_instance_to_config(
     config_name: String,
     instance_name: String,
     network_name: String,
-	network_address: String,
+    network_address: String,
     replicas: u8,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
@@ -62,9 +62,10 @@ fn add_nodeapp_instance_to_config(
             config_name,
             instance_name,
             Instance::NodeApp(NodeAppInstance {
-				network_address,
+                network_address,
                 network_name,
                 replicas: if replicas <= 1 { 1 } else { replicas },
+                container: None,
             }),
             &app_handle,
         )
@@ -75,7 +76,7 @@ fn add_nodeapp_instance_to_config(
 fn add_client_instance_to_config(
     config_name: String,
     instance_name: String,
-	network_address: String,
+    network_address: String,
     network_name: String,
     replicas: u8,
     app_handle: AppHandle,
@@ -85,16 +86,17 @@ fn add_client_instance_to_config(
             config_name,
             instance_name,
             Instance::Client(ClientInstance {
-				network_address,
+                network_address,
                 network_name,
                 replicas: if replicas <= 1 { 1 } else { replicas },
+                container: None,
             }),
             &app_handle,
         )
     })
 }
 /**
- * invalid args `networkAddress` for command `add_nginx_instance_to_config`: 
+ * invalid args `networkAddress` for command `add_nginx_instance_to_config`:
  * command add_nginx_instance_to_config missing required key networkAddress
  */
 #[tauri::command]
@@ -104,8 +106,8 @@ fn add_nginx_instance_to_config(
     memory_limit: String,
     cpus_limit: String,
     memory_reservations: String,
-	network_address: String,
-	network_name: String,
+    network_address: String,
+    network_name: String,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
     app_handle.manager_mut(|man| {
@@ -118,6 +120,7 @@ fn add_nginx_instance_to_config(
                 memory_limit,
                 cpus_limit,
                 memory_reservations,
+                container: None,
             }),
             &app_handle,
         )
@@ -129,17 +132,23 @@ fn add_nginx_instance_to_config(
 fn add_router_instance_to_config(
     config_name: String,
     instance_name: String,
-	network_address: String,
-	network_name: String,
+    network_address: String,
+    network_name: String,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
-	let net_data = NetworkInfo {network_name: network_name, ipv4_address: network_address};
+    let net_data = NetworkInfo {
+        network_name,
+        ipv4_address: network_address,
+    };
 
     app_handle.manager_mut(|man| {
         man.add_instance_to_config(
             config_name,
             instance_name,
-            Instance::Router(RouterInstance { networks: vec![net_data] }),
+            Instance::Router(RouterInstance {
+                networks: vec![net_data],
+                container: None,
+            }),
             &app_handle,
         )
     })
@@ -172,8 +181,13 @@ fn get_instances(
 }
 
 #[tauri::command]
-fn start_config_docker(config_name: String, app_handle: AppHandle) -> Result<(), String> {
+async fn start_config_docker(config_name: String, app_handle: AppHandle) -> Result<(), String> {
     app_handle.manager_mut(|man| man.start_config_docker(config_name, &app_handle))
+}
+
+#[tauri::command]
+async fn stop_config_docker(config_name: String, app_handle: AppHandle) -> Result<(), String> {
+    app_handle.manager_mut(|man| man.stop_config_docker(config_name, &app_handle))
 }
 
 #[tauri::command]
@@ -208,8 +222,9 @@ fn main() {
             add_network_to_config,
             get_instances,
             start_config_docker,
+            stop_config_docker,
             get_container_stats,
-			get_existing_networks,
+            get_existing_networks,
         ])
         .setup(|app| {
             let handle = app.handle();

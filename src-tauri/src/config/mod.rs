@@ -118,19 +118,11 @@ impl ComposeConfig {
         Ok(true)
     }
 
-    pub fn up(&self, app_handle: &AppHandle) -> bool {
+    pub fn up(&self, app_handle: &AppHandle) -> Result<(), String> {
         let app_dir = app_handle
             .path_resolver()
             .app_data_dir()
             .expect("The app data directory should exist.");
-
-        let _prune = Command::new("docker")
-            .current_dir(app_dir.clone())
-            .arg("network")
-            .arg("prune")
-            .arg("-f")
-            .output()
-            .expect("Failed to execute command");
 
         let _down = Command::new("docker")
             .current_dir(app_dir.clone())
@@ -139,7 +131,6 @@ impl ComposeConfig {
             .arg(self.name.clone() + ".yml")
             .arg("down")
             .arg("--remove-orphans")
-            .arg("-d")
             .arg("--rmi")
             .arg("all")
             .output()
@@ -151,19 +142,51 @@ impl ComposeConfig {
             .arg("-f")
             .arg(self.name.clone() + ".yml")
             .arg("up")
-            .arg("--remove-orphans")
             .arg("-d")
+            .arg("--remove-orphans")
+            .arg("--force-recreate")
             .arg("--no-log-prefix")
             .arg("--quiet-pull")
             .output()
             .expect("Failed to execute command");
 
-        println!("Errors: {}", String::from_utf8_lossy(&output.stderr));
+        if output.status.success() {
+            return Ok(());
+        } else {
+            let reason: String = String::from_utf8_lossy(&output.stderr).to_string();
 
-        println!("output {:?}", output);
+            let mut split_reason = reason.as_str().split("\n");
+            let split_2_return = split_reason.nth(split_reason.clone().count() - 2);
+            return Err(split_2_return.unwrap_or("").to_string());
+        }
+    }
 
-        // check if really successful
+    pub fn down(&self, app_handle: &AppHandle) -> Result<(), String> {
+        let app_dir = app_handle
+            .path_resolver()
+            .app_data_dir()
+            .expect("The app data directory should exist.");
 
-        true
+        let output = Command::new("docker")
+            .current_dir(app_dir.clone())
+            .arg("compose")
+            .arg("-f")
+            .arg(self.name.clone() + ".yml")
+            .arg("down")
+            .arg("--remove-orphans")
+            .arg("--rmi")
+            .arg("all")
+            .output()
+            .expect("Failed to execute command");
+
+        if output.status.success() {
+            return Ok(());
+        } else {
+            let reason: String = String::from_utf8_lossy(&output.stderr).to_string();
+
+            let mut split_reason = reason.as_str().split("\n");
+            let split_2_return = split_reason.nth(split_reason.clone().count() - 2);
+            return Err(split_2_return.unwrap_or("").to_string());
+        }
     }
 }

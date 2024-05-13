@@ -37,7 +37,7 @@ function createConfigManager() {
 	const [configName, setConfigName] = createSignal("");
 	const [instances, setInstances] = createSignal(emptyInstanceList);
 	const [selectedInstance, setSelectedInstance] = createSignal(emptyInstance);
-	
+
 	let instancesUpdateNum = 0;
 
 	const getConfigsList = async () => {
@@ -189,7 +189,7 @@ function createConfigManager() {
 				if (!add)
 					toast.error(
 						instanceName +
-							" Node App instance could not be created."
+						" Node App instance could not be created."
 					);
 				else {
 					toast.success(instanceName + " Node App instance created.");
@@ -340,6 +340,26 @@ function createConfigManager() {
 		}
 	};
 
+	const startSelectedConfig = async () => {
+		await invoke("start_config_docker", { configName: configName() })
+			.then(() => {
+				toast.success("This configuration's docker compose started.");
+			})
+			.catch((error) => {
+				toast.error(error);
+			});
+	};
+
+	const stopSelectedConfig = async () => {
+		await invoke("stop_config_docker", { configName: configName() })
+			.then(() => {
+				toast.success("This configuration's docker compose stopped.");
+			})
+			.catch((error) => {
+				toast.error(error);
+			});
+	};
+
 	return {
 		getConfigsList,
 		createNewConfig,
@@ -357,6 +377,8 @@ function createConfigManager() {
 		getContainerStats,
 		getExistingNetworks,
 		setExistingNetworksMap,
+		startSelectedConfig,
+		stopSelectedConfig,
 	};
 }
 

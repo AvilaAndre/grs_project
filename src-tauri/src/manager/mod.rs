@@ -314,11 +314,32 @@ impl ConfigManager {
             None => return Err("Failed to find the configuration.".to_string()),
         };
 
-        config.up(app_handle);
+        return match config.up(app_handle) {
+            Ok(_) => {
+                self.selected_config = Some(config_name);
+                Ok(())
+            }
+            Err(err) => Err(err),
+        };
+    }
 
-        self.selected_config = Some(config_name);
+    pub fn stop_config_docker(
+        &mut self,
+        config_name: String,
+        app_handle: &AppHandle,
+    ) -> Result<(), String> {
+        let config: &ComposeConfig = match self.configs.get(&config_name) {
+            Some(c) => c,
+            None => return Err("Failed to find the configuration.".to_string()),
+        };
 
-        Ok(())
+        return match config.down(app_handle) {
+            Ok(_) => {
+                self.selected_config = Some(config_name);
+                Ok(())
+            }
+            Err(err) => Err(err),
+        };
     }
 
     pub fn get_instance_docker_stats(
@@ -364,18 +385,21 @@ impl ConfigManager {
         }
     }
 
-	pub fn get_existing_networks(&mut self, config_name: String) -> Result<HashMap<String, NetworkData>, String> {
-		let config: &ComposeConfig = match self.configs.get(&config_name) {
+    pub fn get_existing_networks(
+        &mut self,
+        config_name: String,
+    ) -> Result<HashMap<String, NetworkData>, String> {
+        let config: &ComposeConfig = match self.configs.get(&config_name) {
             Some(c) => c,
             None => return Err("Failed to find the configuration.".to_string()),
         };
 
-		let mut final_map = HashMap::new();
+        let mut final_map = HashMap::new();
 
-		if !config.networks.is_none() {
+        if !config.networks.is_none() {
             final_map = config.networks.as_ref().unwrap().clone();
         }
 
-		Ok(final_map)
-	}
+        Ok(final_map)
+    }
 }
