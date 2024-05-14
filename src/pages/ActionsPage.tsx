@@ -3,6 +3,7 @@ import TaskBar from "../shared/components/actions/taskbar"
 import InstanceOptionsBar from "../shared/components/instance/instance-options-bar"
 import { Show, createSignal, onMount } from "solid-js";
 import configManager from "../shared/stores/config-manager";
+import InstanceMap from "../shared/components/actions/instance-map";
 
 export default function ActionsPage(props: any) {
 	const config_name = props.params.id;
@@ -31,7 +32,7 @@ export default function ActionsPage(props: any) {
 		<>
 			<div class="flex flex-row w-screen">
 				<section class="w-full">
-					<div class="w-full h-fit grid grid-cols-3 p-2">
+					<div class="w-full h-fit grid grid-cols-3 p-2 z-10">
 						<A href={"/configs"} class="btn btn-neutral btn-circle">
 							<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z" />
 							</svg>
@@ -63,6 +64,7 @@ export default function ActionsPage(props: any) {
 						</div>
 					</div>
 
+					<InstanceMap />
 					<TaskBar />
 				</section >
 				<section class="w-fit">

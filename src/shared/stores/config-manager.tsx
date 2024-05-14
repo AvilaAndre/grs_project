@@ -20,10 +20,17 @@ export type InstanceData = {
 	stats: DockerStats[];
 };
 
+export type GraphData = {
+	id: string;
+	label: string;
+	type: string;
+}
+
 export const InstanceTypes = ["NodeApp", "Client", "Nginx", "Router"];
 
-const emptyInstanceList: InstanceData[] = [];
+const emptyGraphDataList: GraphData[] = [];
 
+const emptyInstanceList: InstanceData[] = [];
 const emptyInstance: InstanceData = {
 	empty: true,
 	name: "",
@@ -37,6 +44,8 @@ function createConfigManager() {
 	const [configName, setConfigName] = createSignal("");
 	const [instances, setInstances] = createSignal(emptyInstanceList);
 	const [selectedInstance, setSelectedInstance] = createSignal(emptyInstance);
+	const [graphData, setGraphData] = createSignal(emptyGraphDataList);
+	const [graphDataChanged, setGraphDataChanged] = createSignal(false);
 
 	let instancesUpdateNum = 0;
 
@@ -76,6 +85,8 @@ function createConfigManager() {
 
 	const setSelectedConfig = (configName: string) => {
 		setConfigName(configName);
+		setGraphData(emptyGraphDataList);
+		setGraphDataChanged(true);
 		updateConfig();
 	};
 
@@ -108,6 +119,21 @@ function createConfigManager() {
 	const setInstancesWrapper = (insts: InstanceData[]) => {
 		instancesUpdateNum = Math.random();
 		setInstances(insts);
+		const newGraphData: GraphData[] = [];
+		for (let i = 0; i < instances().length; i++) {
+			let instance = instances()[i];
+			if (instance.data?.replicas) {
+				for (let j = 1; j <= instance.data?.replicas; j++) {
+					newGraphData.push({ id: instance.name + "-" + j, label: instance.name, type: instance.type })
+				}
+			} else {
+				newGraphData.push({ id: instance.name, label: instance.name, type: instance.type })
+			}
+		}
+		setGraphData(newGraphData);
+		setGraphDataChanged(true);
+
+		console.log("graphDataSet", newGraphData)
 	};
 
 	const getInstancesList = (): InstanceData[] => {
@@ -350,6 +376,12 @@ function createConfigManager() {
 			});
 	};
 
+	const getGraphData = (): { data: GraphData[], changed: boolean } => {
+		const changed = graphDataChanged();
+		setGraphDataChanged(false);
+		return { data: graphData(), changed };
+	}
+
 	const stopSelectedConfig = async () => {
 		await invoke("stop_config_docker", { configName: configName() })
 			.then(() => {
@@ -379,6 +411,7 @@ function createConfigManager() {
 		setExistingNetworksMap,
 		startSelectedConfig,
 		stopSelectedConfig,
+		getGraphData,
 	};
 }
 
