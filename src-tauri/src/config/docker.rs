@@ -13,16 +13,22 @@ pub fn write_docker_compose(
     mut dock_file: &File,
     compose_config: &ComposeConfig,
 ) -> io::Result<()> {
-	let _ = dock_file.write_all(("version: \"3\"\nservices:\n").as_bytes());
+	
+	if compose_config.node_apps.is_some() || compose_config.clients.is_some() || compose_config.nginxs.is_some() || compose_config.routers.is_some() {
+		let _ = dock_file.write_all(("services:\n").as_bytes());
+		
+		let _ = self::write_node_app_instance(compose_config.node_apps.clone(), &dock_file, 4);
+		let _ = self::write_client_instance(compose_config.clients.clone(), &dock_file, 4);
+		let _ = self::write_nginx_instance(compose_config.nginxs.clone(), &dock_file, 4);
+		let _ = self::write_router_instance(compose_config.routers.clone(), &dock_file, 4);
+	}
 
-    let _ = self::write_node_app_instance(compose_config.node_apps.clone(), &dock_file, 4);
-    let _ = self::write_client_instance(compose_config.clients.clone(), &dock_file, 4);
-    let _ = self::write_nginx_instance(compose_config.nginxs.clone(), &dock_file, 4);
-    let _ = self::write_router_instance(compose_config.routers.clone(), &dock_file, 4);
+	if compose_config.networks.is_some() {
 
-    let _ = dock_file.write_all(("\nnetworks:\n").as_bytes());
-
-    let _ = self::write_network_data(compose_config.networks.clone(), &dock_file, 4);
+		let _ = dock_file.write_all(("\nnetworks:\n").as_bytes());
+		
+		let _ = self::write_network_data(compose_config.networks.clone(), &dock_file, 4);
+	}
 
     Ok(())
 }
