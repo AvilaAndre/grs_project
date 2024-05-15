@@ -6,7 +6,7 @@ use crate::{
 };
 use std::{
     collections::{HashMap, VecDeque},
-    fs,
+    fs::{self, OpenOptions}, io::Write,
 };
 use tauri::AppHandle;
 
@@ -402,4 +402,22 @@ impl ConfigManager {
 
         Ok(final_map)
     }
+
+
+	pub fn add_entry_to_dns_bind(&mut self, config_name: String, dns_name: String, ip_address: String) -> Result<bool, String>{
+
+		let filepath = "/home/matilde/.local/share/com.netking.dev"; // TODO change this to be right 	
+		let filename = "dns.".to_owned()+&config_name+".net";
+
+		let item = format!("{dns_name} IN A {ip_address}\n", ip_address=ip_address, dns_name=dns_name);
+
+		let mut data_file = OpenOptions::new()
+        .append(true)
+        .open(filepath.to_owned()+&filename)
+        .expect(&("Cannot open file ".to_owned()+filepath+&filename));
+
+		let _ = data_file.write(item.as_bytes());
+
+		Ok(true) 
+	}
 }

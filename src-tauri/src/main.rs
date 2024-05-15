@@ -11,6 +11,8 @@ mod utils;
 use std::collections::HashMap;
 
 use std::collections::VecDeque;
+use std::fs::File;
+use std::io::Write;
 
 use config::network_data::NetworkData;
 use config::ComposeConfig;
@@ -35,7 +37,10 @@ fn greet(name: &str) -> String {
 fn create_compose_config(name: &str, app_handle: AppHandle) -> Result<Vec<String>, &'static str> {
     match ComposeConfig::new(name.to_string(), &app_handle) {
         Ok(new_config) => {
-            app_handle.manager_mut(|man| man.configs.insert(name.to_string(), new_config));
+			app_handle.manager_mut(|man| man.configs.insert(name.to_string(), new_config));
+			// TODO verificar se isto nao parte o codigo
+			let _ = add_network_to_config(name.to_string(), name.to_string()+"_dns_net", "192.168.0.0/30".to_string(), "192.168.0.1".to_string(), app_handle.clone());
+			let _ = create_dns_bind(name.to_string());
             return Ok(app_handle.manager(|man| man.get_configs_list()));
         }
         Err(why) => return Err(why),
@@ -172,6 +177,45 @@ fn add_network_to_config(
     })
 }
 
+// TODO javascript disto
+#[tauri::command]
+fn add_entry_to_dns_bind(config_name: String, dns_name: String, ip_address: String, app_handle: AppHandle) -> Result<bool, String>{
+	app_handle.manager_mut(|man| {
+        man.add_entry_to_dns_bind(
+            config_name,
+            dns_name,
+            ip_address
+        )
+    })
+}
+
+pub fn create_dns_bind(config_name: String) -> Result<bool, String> {
+
+	let filepath = "/home/matilde/.local/share/com.netking.dev"; // TODO change this to be right 	
+	let filename = "dns.".to_owned()+&config_name+".net";
+
+	let mut file = match File::create(filepath.to_owned() + &filename) {
+		Ok(f) => f,
+		Err(_) => return Err("Couldn't create file to write".to_owned()),
+	};
+
+	let item = 
+	"$TTL 604800
+	@   IN  SOA ns.{conf-name}.net. admin.{conf-name}.net. (
+			2016010101  ; Serial
+			3600        ; Refresh
+			1800        ; Retry
+			604800      ; Expire
+			86400       ; Minimum TTL
+	)
+	@ IN NS ns.{conf-name}.net.\n";
+
+	let _ = file.write_all(item.as_bytes());
+
+	Ok(true)
+}
+
+
 #[tauri::command]
 fn get_instances(
     config_name: String,
@@ -225,6 +269,7 @@ fn main() {
             stop_config_docker,
             get_container_stats,
             get_existing_networks,
+			add_entry_to_dns_bind,
         ])
         .setup(|app| {
             let handle = app.handle();

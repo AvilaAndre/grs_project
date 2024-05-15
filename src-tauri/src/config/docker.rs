@@ -21,6 +21,7 @@ pub fn write_docker_compose(
 		let _ = self::write_client_instance(compose_config.clients.clone(), &dock_file, 4);
 		let _ = self::write_nginx_instance(compose_config.nginxs.clone(), &dock_file, 4);
 		let _ = self::write_router_instance(compose_config.routers.clone(), &dock_file, 4);
+		let _ = self::write_dns_conf(&compose_config.name, &dock_file, 4);
 	}
 
 	if compose_config.networks.is_some() {
@@ -252,4 +253,31 @@ pub fn write_router_instance(
     }
 
     Ok(())
+}
+
+// TODO function "add_entry_to_dns". argumentos -> IP + name que queremos que fique (igual ao container se nao for especificado).
+// perguntar ao user aquando a criação de uma instancia se quer adicionar ao DNS, só quando o IP esta corretamente preenchido.
+// escreve no .local/share/com.netking.dev/dns.conf-name.net se checkbox for preenchida
+// dns.{conf-name}.net + {conf-name}.conf.local
+// criar NETWORK só do DNS, chamar 'add_network_to_config' após criação da config, associar logo o DNS 192.168.0.0/30 , IP 192.168.0.2. feito em src-tauri/src/main.rs line 40
+
+// TODO criar {conf-name}.local e {conf-name}.net por cada config e depois chamar o fullpath aqui
+
+pub fn write_dns_conf(conf_name: &String, mut file: &File, indentation: usize) -> io::Result<()> {
+
+	let container_name = conf_name.to_string() + "_dns";
+	let network_name = container_name.clone() + "_net";
+
+	let item = format!(
+		"{indent}{container_name}:\n{indent}  image: internetsystemsconsortium/bind9:9.16\n{indent}  container_name: {container_name}\n{indent}  volumes:\n{indent}    - {path}/dns.{conf_name}.net:/etc/bind/dns.{conf_name}.net\n{indent}    - {path}/{conf_name}.conf.local:/etc/bind/{conf_name}.conf.local\n{indent}    - /var/cache/bind\n{indent}    - /var/lib/bind\n{indent}  networks:\n{indent}    {network_name}:\n{indent}      ipv4_address: 192.168.0.2\n{indent}  cap_add:\n{indent}    - NET_ADMIN\n",
+		indent=" ".repeat(indentation),
+		container_name = container_name,
+		network_name = network_name,
+		conf_name = conf_name,
+		path = "/home/matilde/.local/share/com.netking.dev" // TODO change this to be right
+	);
+
+	file.write_all(item.as_bytes())?;
+	
+	Ok(())
 }
