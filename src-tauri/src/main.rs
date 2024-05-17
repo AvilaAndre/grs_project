@@ -65,7 +65,6 @@ fn add_nodeapp_instance_to_config(
                 network_address,
                 network_name,
                 replicas: if replicas <= 1 { 1 } else { replicas },
-                container: None,
             }),
             &app_handle,
         )
@@ -89,7 +88,6 @@ fn add_client_instance_to_config(
                 network_address,
                 network_name,
                 replicas: if replicas <= 1 { 1 } else { replicas },
-                container: None,
             }),
             &app_handle,
         )
@@ -120,7 +118,6 @@ fn add_nginx_instance_to_config(
                 memory_limit,
                 cpus_limit,
                 memory_reservations,
-                container: None,
             }),
             &app_handle,
         )
@@ -147,7 +144,6 @@ fn add_router_instance_to_config(
             instance_name,
             Instance::Router(RouterInstance {
                 networks: vec![net_data],
-                container: None,
             }),
             &app_handle,
         )

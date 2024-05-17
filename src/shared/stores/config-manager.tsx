@@ -16,7 +16,7 @@ export type InstanceData = {
 	empty: boolean;
 	name: string;
 	type: string;
-	data: unknown;
+	data: { replicas: number } | unknown;
 	stats: DockerStats[];
 };
 
@@ -31,6 +31,7 @@ export const InstanceTypes = ["NodeApp", "Client", "Nginx", "Router"];
 const emptyGraphDataList: GraphData[] = [];
 
 const emptyInstanceList: InstanceData[] = [];
+
 const emptyInstance: InstanceData = {
 	empty: true,
 	name: "",
@@ -113,7 +114,22 @@ function createConfigManager() {
 			}
 		);
 
-		setInstancesWrapper(instances_parsed);
+		let instances_replicated: InstanceData[] = []
+
+		instances_parsed.map((inst) => {
+			if (inst.type == "NodeApp" || inst.type == "Client") {
+				for (let i = 1; i <= inst.data.replicas; i++) {
+					let new_inst = { ...inst };
+					new_inst.name = "comnetkingdev-" + new_inst.name + "-" + i;
+					instances_replicated.push(new_inst)
+				}
+			} else {
+				inst.name = "comnetkingdev-" + inst.name;
+				instances_replicated.push(inst);
+			}
+		})
+
+		setInstancesWrapper(instances_replicated);
 	};
 
 	const setInstancesWrapper = (insts: InstanceData[]) => {
@@ -122,18 +138,10 @@ function createConfigManager() {
 		const newGraphData: GraphData[] = [];
 		for (let i = 0; i < instances().length; i++) {
 			let instance = instances()[i];
-			if (instance.data?.replicas) {
-				for (let j = 1; j <= instance.data?.replicas; j++) {
-					newGraphData.push({ id: instance.name + "-" + j, label: instance.name, type: instance.type })
-				}
-			} else {
-				newGraphData.push({ id: instance.name, label: instance.name, type: instance.type })
-			}
+			newGraphData.push({ id: instance.name, label: instance.name, type: instance.type })
 		}
 		setGraphData(newGraphData);
 		setGraphDataChanged(true);
-
-		console.log("graphDataSet", newGraphData)
 	};
 
 	const getInstancesList = (): InstanceData[] => {
@@ -142,24 +150,14 @@ function createConfigManager() {
 
 	const selectInstance = async (instance: string) => {
 		setSelectedInstance(emptyInstance);
-		await invoke("get_instances", { configName: configName() })
-			.then((res: any) => {
-				for (let i = 0; i < res.length; i++) {
-					if (res[i][0] === instance) {
-						setSelectedInstance({
-							name: res[i][0],
-							type: Object.keys(res[i][1])[0],
-							data: Object.values(res[i][1])[0],
-							empty: false,
-							stats: [],
-						});
-						break;
-					}
-				}
-			})
-			.catch((_) => {
-				setSelectedInstance(emptyInstance);
-			});
+
+		for (let i = 0; i < instances().length; i++) {
+			let inst = instances()[i];
+			if (inst.name == instance) {
+				setSelectedInstance(inst)
+				break
+			}
+		}
 	};
 	const unselectInstance = () => setSelectedInstance(emptyInstance);
 
@@ -350,7 +348,7 @@ function createConfigManager() {
 
 			return result;
 		} catch (err) {
-			console.log("Stats fetch failed:", err);
+			console.error("Stats fetch failed:", err);
 		}
 	};
 

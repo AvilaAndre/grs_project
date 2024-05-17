@@ -4,6 +4,7 @@ use crate::{
     instances::Instance,
     utils::copy_dir_all,
 };
+use core::str;
 use std::{
     collections::{HashMap, VecDeque},
     fs,
@@ -348,6 +349,16 @@ impl ConfigManager {
     ) -> Result<Vec<VecDeque<DockerStats>>, String> {
         let mut res: Vec<VecDeque<DockerStats>> = Vec::new();
 
+        let docker_stats: Option<&VecDeque<DockerStats>> = self.stats_recorded.get(&instance_name);
+        if docker_stats.is_some() {
+            let mut to_push: VecDeque<DockerStats> = VecDeque::new();
+            for stat in docker_stats.unwrap() {
+                to_push.push_back(stat.clone());
+            }
+            res.push(to_push);
+        }
+
+        /* TODO: Delete this
         for stat_key in self.stats_recorded.keys() {
             if stat_key.contains(&instance_name) {
                 let docker_stats: Option<&VecDeque<DockerStats>> =
@@ -361,11 +372,16 @@ impl ConfigManager {
                 }
             }
         }
+        */
 
         Ok(res)
     }
 
     pub fn add_new_docker_stats(&mut self, stats: DockerStats) {
+        if self.selected_config.is_none() {
+            return;
+        }
+
         match self.stats_recorded.get_mut(&stats.name) {
             Some(deque) => {
                 if deque.len() == STATS_CAPACITY {

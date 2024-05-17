@@ -31,8 +31,7 @@ export default function NetworksModal() {
 						<input type="text" value={name()} onChange={(e: Event) => {
 							// @ts-ignore
 							let val = e?.target?.value
-							val = val.trim()
-							val = val.replace(' ', '')
+							val = val.trim().replace(' ', '').replace('-', '');
 
 							if (val)
 								setName(val)

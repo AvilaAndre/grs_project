@@ -117,6 +117,7 @@ export default function InstanceMap() {
 						<title>{data.id}</title>
 					</circle>
 
+				// @ts-ignore
 				nodesParent?.appendChild(circle);
 			}
 		} else {
@@ -139,7 +140,7 @@ export default function InstanceMap() {
 
 	return (
 		<>
-			<svg ref={svg} width={rect().width} height={rect().height} class="relative top-0 left-0 z-0" >
+			<svg ref={svg} width={rect().width} height={rect().height} class="absolute top-0 left-0 z-0" >
 				<g id="links" stroke="currentColor" stroke-opacity="0.5">
 					<For each={links()} fallback={<></>}>{(data: graphLink) =>
 						<line id={data.source + "-" + data.target} stroke-width={5 + data.strength} class="stroke-primary"
@@ -154,10 +155,3 @@ export default function InstanceMap() {
 		</>
 	);
 }
-/*
-					<For each={nodes()} fallback={<></>}>{(data: graphNode) =>
-						<circle id={data.id} r="15" fill={getNodeColor(data)} cx={(data.x ?? 0)} cy={(data.y ?? 0)}>
-							<title>{data.id}</title>
-						</circle>
-					}</For>
-					*/
