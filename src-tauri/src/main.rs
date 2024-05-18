@@ -15,7 +15,7 @@ use std::collections::VecDeque;
 use config::network_data::NetworkData;
 use config::ComposeConfig;
 use docker::dockerstats::DockerStats;
-use docker::watcher::watch_containers;
+use docker::watcher::{watch_containers_connections, watch_containers_stats};
 use instances::nginx::NginxInstance;
 use instances::router::RouterInstance;
 use instances::types::NetworkData as NetworkInfo;
@@ -195,6 +195,11 @@ async fn get_container_stats(
 }
 
 #[tauri::command]
+async fn get_container_connections(app_handle: AppHandle) -> Vec<(String, String)> {
+    app_handle.manager(|man| man.get_container_connections())
+}
+
+#[tauri::command]
 async fn get_existing_networks(
     config_name: String,
     app_handle: AppHandle,
@@ -220,6 +225,7 @@ fn main() {
             start_config_docker,
             stop_config_docker,
             get_container_stats,
+            get_container_connections,
             get_existing_networks,
         ])
         .setup(|app| {
@@ -230,7 +236,10 @@ fn main() {
                 .expect("ConfigManager initialize should succeed");
             *app_state.manager.lock().unwrap() = Some(manager);
 
-            std::thread::spawn(|| watch_containers(handle));
+            let handle2 = app.app_handle();
+
+            std::thread::spawn(|| watch_containers_stats(handle));
+            std::thread::spawn(|| watch_containers_connections(handle2));
 
             Ok(())
         })

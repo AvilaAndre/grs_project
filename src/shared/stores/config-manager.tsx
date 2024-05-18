@@ -26,9 +26,16 @@ export type GraphData = {
 	type: string;
 }
 
+export type GraphConnection = {
+	source: string,
+	destination: string,
+}
+
 export const InstanceTypes = ["NodeApp", "Client", "Nginx", "Router"];
 
 const emptyGraphDataList: GraphData[] = [];
+
+const emptyGraphConnectionsList: GraphConnection[] = [];
 
 const emptyInstanceList: InstanceData[] = [];
 
@@ -46,6 +53,7 @@ function createConfigManager() {
 	const [instances, setInstances] = createSignal(emptyInstanceList);
 	const [selectedInstance, setSelectedInstance] = createSignal(emptyInstance);
 	const [graphData, setGraphData] = createSignal(emptyGraphDataList);
+	const [graphConnections, setGraphConnections] = createSignal(emptyGraphConnectionsList);
 	const [graphDataChanged, setGraphDataChanged] = createSignal(false);
 
 	let instancesUpdateNum = 0;
@@ -374,10 +382,11 @@ function createConfigManager() {
 			});
 	};
 
-	const getGraphData = (): { data: GraphData[], changed: boolean } => {
+	const getGraphData = (): { data: GraphData[], connections: GraphConnection[], changed: boolean } => {
+		fetchGraphConnections();
 		const changed = graphDataChanged();
 		setGraphDataChanged(false);
-		return { data: graphData(), changed };
+		return { data: graphData(), connections: graphConnections(), changed };
 	}
 
 	const stopSelectedConfig = async () => {
@@ -389,6 +398,26 @@ function createConfigManager() {
 				toast.error(error);
 			});
 	};
+
+	const fetchGraphConnections = async () => {
+		let connects: string[][] = await invoke("get_container_connections", {});
+		let connects_parsed: GraphConnection[] = [];
+
+		for (let i = 0; i < connects.length; i++) {
+			connects_parsed.push({ source: connects[i][0], destination: connects[i][1] });
+		}
+
+		const pairs = graphConnections().map((val) => val.source + "|-|" + val.destination);
+		const changed = connects_parsed.reduce((acc, val) => {
+			const exists = pairs.reduce((acc_in, val_in) => acc_in || val_in == (val.source + "|-|" + val.destination), false);
+			return acc && exists;
+		}, true);
+
+		if (!changed) {
+			setGraphDataChanged(true);
+			setGraphConnections(connects_parsed);
+		}
+	}
 
 	return {
 		getConfigsList,

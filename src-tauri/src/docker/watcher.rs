@@ -7,7 +7,7 @@ use tauri::AppHandle;
 
 use crate::{docker::dockerstats::DockerStats, state::ServiceAccess};
 
-pub fn watch_containers(app_handle: AppHandle) {
+pub fn watch_containers_stats(app_handle: AppHandle) {
     let app_dir = app_handle
         .path_resolver()
         .app_data_dir()
@@ -48,6 +48,48 @@ pub fn watch_containers(app_handle: AppHandle) {
                     Err(_) => {} // continue
                 }
             }
+        }
+    }
+}
+
+pub fn watch_containers_connections(app_handle: AppHandle) {
+    let app_dir = app_handle
+        .path_resolver()
+        .app_data_dir()
+        .expect("The app data directory should exist.");
+
+    let mut selected_config: Option<String>;
+
+    loop {
+        selected_config = app_handle.manager(|man| man.selected_config.clone());
+
+        let mut connections: Vec<(String, String)> = vec![];
+
+        if selected_config.is_some() {
+            for source in app_handle.manager(|man| man.stats_recorded.clone()).keys() {
+                for destination in app_handle.manager(|man| man.stats_recorded.clone()).keys() {
+                    if source == destination {
+                        continue;
+                    }
+
+                    let ping = Command::new("docker")
+                        .current_dir(app_dir.clone())
+                        .arg("exec")
+                        .arg(source)
+                        .arg("ping")
+                        .arg("-c")
+                        .arg("1")
+                        .arg(destination)
+                        .output()
+                        .expect("Failed to execute command");
+
+                    if ping.status.success() {
+                        connections.push((source.to_string(), destination.to_string()));
+                    }
+                }
+            }
+
+            app_handle.manager_mut(|man| man.set_container_connections(connections));
         }
     }
 }
