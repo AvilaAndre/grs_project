@@ -388,7 +388,6 @@ impl ConfigManager {
     }
 
     pub fn get_container_connections(&self) -> Vec<(String, String)> {
-        println!("connections {:?}", self.connections.clone());
         return self.connections.clone()
     }
 

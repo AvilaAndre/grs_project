@@ -408,12 +408,12 @@ function createConfigManager() {
 		}
 
 		const pairs = graphConnections().map((val) => val.source + "|-|" + val.destination);
-		const changed = connects_parsed.reduce((acc, val) => {
+		const changed = connects_parsed.length != pairs.length || !connects_parsed.reduce((acc, val) => {
 			const exists = pairs.reduce((acc_in, val_in) => acc_in || val_in == (val.source + "|-|" + val.destination), false);
 			return acc && exists;
 		}, true);
 
-		if (!changed) {
+		if (changed) {
 			setGraphDataChanged(true);
 			setGraphConnections(connects_parsed);
 		}

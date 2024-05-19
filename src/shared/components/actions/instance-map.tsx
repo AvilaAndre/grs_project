@@ -28,8 +28,8 @@ export default function InstanceMap() {
 		d3.forceSimulation()
 			.force('link', d3.forceLink()
 				.id(link => link.id)
-				.strength(link => link.strength))
-			.force('charge', d3.forceManyBody().strength(-20))
+				.strength(link => -10 * link.strength))
+			.force('charge', d3.forceManyBody().strength(-100))
 			.force('center', d3.forceCenter(rect().width / 2, rect().height / 2))
 	)
 
@@ -44,6 +44,9 @@ export default function InstanceMap() {
 	const emptyLinkArray: graphLink[] = [];
 	const [links, setLinks] = createSignal(emptyLinkArray);
 
+	const emptyNumberArray: number[] = [];
+	const [intervalIds, setIntervalIds] = createSignal(emptyNumberArray);
+
 	function getNodeColor(node: graphNode) {
 		return node.level === 1 ? 'red' : 'gray'
 	}
@@ -55,13 +58,24 @@ export default function InstanceMap() {
 
 	onMount(() => {
 		window.addEventListener('resize', handler);
-		const { data, connections } = getGraphData();
-		updateData(data, connections);
-		updateGraph();
+
+		let intervalId = setInterval(() => {
+			const { data, connections, changed } = getGraphData();
+			if (changed) {
+				updateData(data, connections);
+				updateGraph();
+			}
+		}, 1000)
+
+		setIntervalIds([...intervalIds(), intervalId])
 	});
 
 	onCleanup(() => {
 		window.removeEventListener('resize', handler);
+		const ids = intervalIds()
+		for (let i = 0; i < ids.length; i++) {
+			clearInterval(ids[i]);
+		}
 	})
 
 	const updateData = (graphData: GraphData[], graphConnections: GraphConnection[]) => {
@@ -93,13 +107,6 @@ export default function InstanceMap() {
 		simulation().force('link');
 	}
 
-	setInterval(() => {
-		const { data, connections, changed } = getGraphData();
-		if (changed) {
-			updateData(data, connections);
-			updateGraph();
-		}
-	}, 1000)
 
 	createEffect(() => {
 		nodes()
