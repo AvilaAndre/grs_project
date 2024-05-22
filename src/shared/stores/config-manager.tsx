@@ -28,7 +28,7 @@ export type GraphData = {
 
 export type GraphConnection = {
 	source: string,
-	destination: string,
+	target: string,
 }
 
 export const InstanceTypes = ["NodeApp", "Client", "Nginx", "Router"];
@@ -404,12 +404,14 @@ function createConfigManager() {
 		let connects_parsed: GraphConnection[] = [];
 
 		for (let i = 0; i < connects.length; i++) {
-			connects_parsed.push({ source: connects[i][0], destination: connects[i][1] });
+			connects_parsed.push({ source: connects[i][0], target: connects[i][1] });
 		}
 
-		const pairs = graphConnections().map((val) => val.source + "|-|" + val.destination);
+
+		// @ts-ignore
+		const pairs = graphConnections().map((val) => val.source.id + "|-|" + val.target.id);
 		const changed = connects_parsed.length != pairs.length || !connects_parsed.reduce((acc, val) => {
-			const exists = pairs.reduce((acc_in, val_in) => acc_in || val_in == (val.source + "|-|" + val.destination), false);
+			const exists = pairs.reduce((acc_in, val_in) => acc_in || val_in == (val.source + "|-|" + val.target), false);
 			return acc && exists;
 		}, true);
 

@@ -20,6 +20,11 @@ type graphLink = {
 }
 
 export default function InstanceMap() {
+
+	const ticked = () => {
+		console.log("ticked")
+	}
+
 	const [rect, setRect] = createSignal({
 		height: window.innerHeight,
 		width: window.innerWidth
@@ -31,6 +36,7 @@ export default function InstanceMap() {
 				.strength(link => -10 * link.strength))
 			.force('charge', d3.forceManyBody().strength(-100))
 			.force('center', d3.forceCenter(rect().width / 2, rect().height / 2))
+			.on("tick", ticked)
 	)
 
 	const { getGraphData, selectInstance } = configManager;
@@ -110,6 +116,7 @@ export default function InstanceMap() {
 
 	createEffect(() => {
 		nodes()
+		console.log("effect")
 		const nodesParent = document.querySelector("#nodes");
 		if (nodesParent?.childNodes.length != nodes().length) {
 			nodesParent?.replaceChildren();

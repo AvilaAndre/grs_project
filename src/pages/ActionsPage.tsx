@@ -3,7 +3,7 @@ import TaskBar from "../shared/components/actions/taskbar"
 import InstanceOptionsBar from "../shared/components/instance/instance-options-bar"
 import { Show, createSignal, onMount } from "solid-js";
 import configManager from "../shared/stores/config-manager";
-import InstanceMap from "../shared/components/actions/instance-map";
+import InstanceMap from "../shared/components/actions/instance-map2";
 
 export default function ActionsPage(props: any) {
 	const config_name = props.params.id;
