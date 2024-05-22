@@ -6,9 +6,11 @@ use crate::{
 };
 use std::{
     collections::{HashMap, VecDeque},
-    fs::{self, OpenOptions}, io::Write,
+    fs::{self, OpenOptions}, io::Write, str::FromStr,
 };
 use tauri::AppHandle;
+
+use ipnetwork::IpNetwork;
 
 pub struct ConfigManager {
     pub selected_config: Option<String>,
@@ -211,6 +213,24 @@ impl ConfigManager {
         {
             return Err(format!("Network with name {} already exists.", network_name).to_string());
         }
+
+		let new_subnet = match IpNetwork::from_str(&network.subnet) {
+            Ok(subnet) => subnet,
+            Err(_) => return Err(format!("Invalid subnet format: {}", network.subnet)),
+        };
+
+        // Check if the subnet is contained within any existing subnet
+        for existing_network in config.networks.as_ref().unwrap().values() {
+            let existing_subnet = match IpNetwork::from_str(&existing_network.subnet) {
+                Ok(subnet) => subnet,
+                Err(_) => return Err(format!("Invalid subnet format in existing network: {}", existing_network.subnet)),
+            };
+
+            if existing_subnet.contains(new_subnet.ip()) || new_subnet.contains(existing_subnet.ip()) {
+                return Err(format!("Subnet {} is contained within or contains existing subnet ({}).", network.subnet, existing_network.subnet));
+            }
+        }
+
         config
             .networks
             .as_mut()
@@ -399,6 +419,9 @@ impl ConfigManager {
         if !config.networks.is_none() {
             final_map = config.networks.as_ref().unwrap().clone();
         }
+
+		// Exclude the DNS network from the list that goes to user
+		final_map.remove(&(config_name.to_string() + "_dns_net"));
 
         Ok(final_map)
     }
