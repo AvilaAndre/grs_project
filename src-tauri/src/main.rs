@@ -11,8 +11,6 @@ mod utils;
 use std::collections::HashMap;
 
 use std::collections::VecDeque;
-use std::fs::File;
-use std::io::Write;
 
 use config::network_data::NetworkData;
 use config::ComposeConfig;
@@ -38,9 +36,18 @@ fn create_compose_config(name: &str, app_handle: AppHandle) -> Result<Vec<String
     match ComposeConfig::new(name.to_string(), &app_handle) {
         Ok(new_config) => {
 			app_handle.manager_mut(|man| man.configs.insert(name.to_string(), new_config));
+			
+
 			// TODO verificar se isto nao parte o codigo
-			let _ = add_network_to_config(name.to_string(), name.to_string()+"_dns_net", "192.168.0.0/30".to_string(), "192.168.0.1".to_string(), app_handle.clone());
-			let _ = create_dns_bind(name.to_string());
+			let _ = app_handle.manager_mut(|man| {
+				man.add_network_to_config(
+					name.to_string(),
+					name.to_string()+"_dns_net",
+					NetworkData { subnet: "192.168.0.0/30".to_string(), gateway: "192.168.0.1".to_string()},
+					&app_handle,
+				)
+			});
+			
             return Ok(app_handle.manager(|man| man.get_configs_list()));
         }
         Err(why) => return Err(why),
@@ -178,6 +185,11 @@ fn add_network_to_config(
 }
 
 // TODO javascript disto
+// TODO function "add_entry_to_dns". argumentos -> IP + name que queremos que fique (igual ao container se nao for especificado).
+// perguntar ao user aquando a criação de uma instancia se quer adicionar ao DNS, só quando o IP esta corretamente preenchido.
+// escreve no .local/share/com.netking.dev/dns.conf-name.net se checkbox for preenchida
+// dns.{conf-name}.net + {conf-name}.conf.local
+// criar NETWORK só do DNS, chamar 'add_network_to_config' após criação da config, associar logo o DNS 192.168.0.0/30 , IP 192.168.0.2. feito em src-tauri/src/main.rs line 40
 #[tauri::command]
 fn add_entry_to_dns_bind(config_name: String, dns_name: String, ip_address: String, app_handle: AppHandle) -> Result<bool, String>{
 	app_handle.manager_mut(|man| {
@@ -187,32 +199,6 @@ fn add_entry_to_dns_bind(config_name: String, dns_name: String, ip_address: Stri
             ip_address
         )
     })
-}
-
-pub fn create_dns_bind(config_name: String) -> Result<bool, String> {
-
-	let filepath = "/home/matilde/.local/share/com.netking.dev"; // TODO change this to be right 	
-	let filename = "dns.".to_owned()+&config_name+".net";
-
-	let mut file = match File::create(filepath.to_owned() + &filename) {
-		Ok(f) => f,
-		Err(_) => return Err("Couldn't create file to write".to_owned()),
-	};
-
-	let item = 
-	"$TTL 604800
-	@   IN  SOA ns.{conf-name}.net. admin.{conf-name}.net. (
-			2016010101  ; Serial
-			3600        ; Refresh
-			1800        ; Retry
-			604800      ; Expire
-			86400       ; Minimum TTL
-	)
-	@ IN NS ns.{conf-name}.net.\n";
-
-	let _ = file.write_all(item.as_bytes());
-
-	Ok(true)
 }
 
 

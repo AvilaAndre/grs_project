@@ -12,6 +12,7 @@ use super::ComposeConfig;
 pub fn write_docker_compose(
     mut dock_file: &File,
     compose_config: &ComposeConfig,
+	filepath: String,
 ) -> io::Result<()> {
 	
 	if compose_config.node_apps.is_some() || compose_config.clients.is_some() || compose_config.nginxs.is_some() || compose_config.routers.is_some() {
@@ -21,7 +22,7 @@ pub fn write_docker_compose(
 		let _ = self::write_client_instance(compose_config.clients.clone(), &dock_file, 4);
 		let _ = self::write_nginx_instance(compose_config.nginxs.clone(), &dock_file, 4);
 		let _ = self::write_router_instance(compose_config.routers.clone(), &dock_file, 4);
-		let _ = self::write_dns_conf(&compose_config.name, &dock_file, 4);
+		let _ = self::write_dns_conf(&compose_config.name, &dock_file, filepath, 4);
 	}
 
 	if compose_config.networks.is_some() {
@@ -255,15 +256,13 @@ pub fn write_router_instance(
     Ok(())
 }
 
-// TODO function "add_entry_to_dns". argumentos -> IP + name que queremos que fique (igual ao container se nao for especificado).
-// perguntar ao user aquando a criação de uma instancia se quer adicionar ao DNS, só quando o IP esta corretamente preenchido.
-// escreve no .local/share/com.netking.dev/dns.conf-name.net se checkbox for preenchida
-// dns.{conf-name}.net + {conf-name}.conf.local
-// criar NETWORK só do DNS, chamar 'add_network_to_config' após criação da config, associar logo o DNS 192.168.0.0/30 , IP 192.168.0.2. feito em src-tauri/src/main.rs line 40
 
-// TODO criar {conf-name}.local e {conf-name}.net por cada config e depois chamar o fullpath aqui
+/**
+ * Writes the DNS instance. Fixed IP of 192.168.0.2 in network 192.168.0.0/30.
+ */
+pub fn write_dns_conf(conf_name: &String, mut file: &File, filepath: String, indentation: usize) -> io::Result<()> {
 
-pub fn write_dns_conf(conf_name: &String, mut file: &File, indentation: usize) -> io::Result<()> {
+	file.write_all(b"\n## DNS Configuration\n")?;
 
 	let container_name = conf_name.to_string() + "_dns";
 	let network_name = container_name.clone() + "_net";
@@ -274,7 +273,7 @@ pub fn write_dns_conf(conf_name: &String, mut file: &File, indentation: usize) -
 		container_name = container_name,
 		network_name = network_name,
 		conf_name = conf_name,
-		path = "/home/matilde/.local/share/com.netking.dev" // TODO change this to be right
+		path = filepath
 	);
 
 	file.write_all(item.as_bytes())?;
