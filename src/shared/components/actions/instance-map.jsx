@@ -7,11 +7,6 @@ export default function InstanceMap() {
 
 	const { getGraphData, selectInstance } = configManager;
 
-	const data = {
-		nodes: [],
-		links: []
-	}
-
 	// Specify the dimensions of the chart.
 	const width = 928;
 	const height = 680;
