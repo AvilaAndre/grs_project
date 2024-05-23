@@ -42,7 +42,7 @@ fn create_compose_config(name: &str, app_handle: AppHandle) -> Result<Vec<String
 				man.add_network_to_config(
 					name.to_string(),
 					name.to_string()+"_dns_net",
-					NetworkData { subnet: "192.168.0.0/30".to_string(), gateway: "192.168.0.0".to_string(), dns_endpoint: Some("192.168.0.2".to_string())},
+					NetworkData { subnet: "192.168.0.0/29".to_string(), gateway: "192.168.0.1".to_string(), dns_endpoint: Some("192.168.0.3".to_string())},
 					&app_handle,
 				)
 			});
@@ -199,7 +199,7 @@ fn add_network_to_config(
 // perguntar ao user aquando a criação de uma instancia se quer adicionar ao DNS, só quando o IP esta corretamente preenchido.
 // escreve no .local/share/com.netking.dev/dns.conf-name.net se checkbox for preenchida
 // dns.{conf-name}.net + {conf-name}.conf.local
-// criar NETWORK só do DNS, chamar 'add_network_to_config' após criação da config, associar logo o DNS 192.168.0.0/30 , IP 192.168.0.1. feito em src-tauri/src/main.rs line 40
+// criar NETWORK só do DNS, chamar 'add_network_to_config' após criação da config, associar logo o DNS 192.168.0.0/30 , IP 192.168.0.2. feito em src-tauri/src/main.rs line 40
 #[tauri::command]
 fn add_entry_to_dns_bind(config_name: String, dns_name: String, ip_address: String, app_handle: AppHandle) -> Result<bool, String>{
 	app_handle.manager_mut(|man| {
