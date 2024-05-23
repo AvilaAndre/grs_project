@@ -15,15 +15,17 @@ pub fn write_docker_compose(
 	filepath: String,
 ) -> io::Result<()> {
 	
+	let _ = dock_file.write_all(("services:\n").as_bytes());
+	
 	if compose_config.node_apps.is_some() || compose_config.clients.is_some() || compose_config.nginxs.is_some() || compose_config.routers.is_some() {
-		let _ = dock_file.write_all(("services:\n").as_bytes());
 		
 		let _ = self::write_node_app_instance(compose_config.node_apps.clone(), &dock_file, 4);
 		let _ = self::write_client_instance(compose_config.clients.clone(), &dock_file, 4);
 		let _ = self::write_nginx_instance(compose_config.nginxs.clone(), &dock_file, 4);
 		let _ = self::write_router_instance(compose_config.routers.clone(), &dock_file, 4);
-		let _ = self::write_dns_conf(&compose_config.name, &dock_file, filepath, 4);
 	}
+	
+	let _ = self::write_dns_conf(&compose_config.name, &dock_file, filepath, 4);
 
 	if compose_config.networks.is_some() {
 
@@ -221,7 +223,7 @@ pub fn write_router_instance(
 ) -> io::Result<()> {
     match router_instance_map {
         Some(map) => {
-            file.write_all(b"\n## Router Instances\n")?;
+            file.write_all(format!("\n{}## Router Instances\n", " ".repeat(indentation)).as_bytes())?;
 
             for (key, value) in map {
 
@@ -262,7 +264,7 @@ pub fn write_router_instance(
  */
 pub fn write_dns_conf(conf_name: &String, mut file: &File, filepath: String, indentation: usize) -> io::Result<()> {
 
-	file.write_all(b"\n## DNS Configuration\n")?;
+	file.write_all(format!("\n{}## DNS Configuration\n", " ".repeat(indentation)).as_bytes())?;
 
 	let container_name = conf_name.to_string() + "_dns";
 	let network_name = container_name.clone() + "_net";
@@ -278,5 +280,7 @@ pub fn write_dns_conf(conf_name: &String, mut file: &File, filepath: String, ind
 
 	file.write_all(item.as_bytes())?;
 	
+	file.write_all(format!("\n{}## Router for DNS and other networks\n", " ".repeat(indentation)).as_bytes())?;
+
 	Ok(())
 }

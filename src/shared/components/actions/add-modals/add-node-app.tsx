@@ -12,7 +12,8 @@ export default function AddNodeAppModal() {
 
 	const [existingNetworks, setExistingNetworks] = createSignal({});
 
-	const { addNewNodeAppInstance, setExistingNetworksMap } = configManager;
+	const { addNewNodeAppInstance, setExistingNetworksMap, addEntryToDnsBind } =
+		configManager;
 
 	async function addNewNode() {
 		if (
@@ -29,6 +30,20 @@ export default function AddNodeAppModal() {
 			setNetworkName("");
 			setNetworkAddress("");
 		}
+	}
+
+	async function addDNS() {
+		await addEntryToDnsBind(name(), networkAddress());
+	}
+
+	async function submitAction() {
+		const dns = document.getElementById(
+			"nodeAppDNSCheckbox"
+		) as HTMLInputElement;
+		if (dns && dns.checked) {
+			await addDNS();
+		}
+		await addNewNode();
 	}
 
 	function showOrHideNetworkAddressDiv() {
@@ -150,13 +165,18 @@ export default function AddNodeAppModal() {
 							"nodeAppNetworkAddress"
 						)?.classList;
 
-						if (elem) {
+						const dns =
+							document.getElementById("nodeAppDNSdiv")?.classList;
+
+						if (elem && dns) {
 							if (!verifyIP(subnet(), networkAddress())) {
 								elem.add("input-error");
 								elem.remove("input-success");
+								dns.replace("flex", "hidden");
 							} else {
 								elem.remove("input-error");
 								elem.add("input-success");
+								dns.replace("hidden", "flex");
 							}
 						}
 					}}
@@ -164,8 +184,22 @@ export default function AddNodeAppModal() {
 					placeholder="172.16.123.66"
 				/>
 			</label>
+			<div class="form-control hidden" id="nodeAppDNSdiv">
+				<label class="label cursor-pointer">
+					<span class="label-text">
+						Add <span class="font-bold">{name()}</span> instance to
+						DNS under same name and network address?
+					</span>
+					<input
+						type="checkbox"
+						checked
+						class="checkbox checkbox-sm"
+						id="nodeAppDNSCheckbox"
+					/>
+				</label>
+			</div>
 			<div class="modal-action">
-				<form method="dialog" onSubmit={addNewNode}>
+				<form method="dialog" onSubmit={submitAction}>
 					<button
 						class="btn"
 						disabled={

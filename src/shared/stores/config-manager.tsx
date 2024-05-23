@@ -350,9 +350,24 @@ function createConfigManager() {
 
 			return result;
 		} catch (err) {
-			console.log("Stats fetch failed:", err);
+			console.log("Networks fetch failed:", err);
 		}
 	};
+
+
+	const addEntryToDnsBind = async (dnsName: string, ipAddress: string) => {
+		try {
+			let result: any[] = await invoke("add_entry_to_dns_bind", {
+				configName: configName(),
+				dnsName: dnsName,
+				ipAddress: ipAddress
+			});
+
+			return result;
+		} catch (err) {
+			console.log("DNS addition failed:", err);
+		}
+	}
 
 	const setExistingNetworksMap = async (setExistingNetworks: any) => {
 		try {
@@ -412,6 +427,7 @@ function createConfigManager() {
 		startSelectedConfig,
 		stopSelectedConfig,
 		getGraphData,
+		addEntryToDnsBind,
 	};
 }
 
