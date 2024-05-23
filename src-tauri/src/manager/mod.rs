@@ -56,8 +56,6 @@ impl ConfigManager {
 
         fs::create_dir_all(&app_dir).expect("The app data directory should be created.");
 
-        println!("path {:?}", app_dir);
-
         // Search for configs
         let mut configs: HashMap<String, ComposeConfig> = HashMap::new();
 

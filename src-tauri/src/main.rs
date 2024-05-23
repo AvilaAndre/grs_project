@@ -179,8 +179,6 @@ fn add_network_to_config(
 			dns_end = None;
 		}
 
-		println!("\ndns_endpoint: {}\n", dns_endpoint);
-
         man.add_network_to_config(
             config_name,
             network_name,

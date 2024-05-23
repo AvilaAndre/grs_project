@@ -254,8 +254,6 @@ pub fn write_router_instance(
 				image = "./images/baseimage",
 				key = key
 			);
-
-			println!("\ndns_router {:?}\n{:?} value {:?}\n", dns_router.clone(), key, value);
 			
 			if value.networks.len() > 0 {
 				let networks_string = value.networks.iter().map(|network| {
@@ -315,7 +313,6 @@ fn create_dns_router(network_data_map: Option<HashMap<String, NetworkData>>) -> 
 					let item: NetData = NetData{ network_name: key.clone(), ipv4_address: value.clone().dns_endpoint.unwrap() };
 					networks_format.push(item);
 				}
-				println!("key {:?} value {:?}", key, value);
 			}
 
 		}
@@ -326,7 +323,6 @@ fn create_dns_router(network_data_map: Option<HashMap<String, NetworkData>>) -> 
 	}
 		
 	Some(RouterInstance {
-		networks: networks_format,
-		container: None,
+		networks: networks_format
 	})
 }
