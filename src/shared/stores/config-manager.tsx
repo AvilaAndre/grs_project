@@ -303,13 +303,15 @@ function createConfigManager() {
 	const addNewNetworkToConfig = async (
 		networkName: string,
 		subnet: string,
-		gateway: string
+		gateway: string,
+		dnsEndpoint: string,
 	): Promise<boolean> => {
 		let result = await invoke("add_network_to_config", {
 			configName: configName(),
 			networkName,
 			subnet,
 			gateway,
+			dnsEndpoint
 		})
 			.then((add) => {
 				if (!add)

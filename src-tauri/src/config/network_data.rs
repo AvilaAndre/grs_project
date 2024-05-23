@@ -4,4 +4,5 @@ use serde::{Deserialize, Serialize};
 pub struct NetworkData {
     pub subnet: String,
     pub gateway: String,
+	pub dns_endpoint: Option<String>,
 }
