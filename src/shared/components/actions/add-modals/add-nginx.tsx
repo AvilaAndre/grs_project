@@ -51,8 +51,7 @@ export default function AddNginxModal() {
 				<input type="text" value={name()} onChange={(e: Event) => {
 					// @ts-ignore
 					let val = e?.target?.value
-					val = val.trim()
-					val = val.replace(' ', '')
+					val = val.trim().replace(' ', '').replace('-', '');
 
 					if (val)
 						setName(val)
@@ -182,11 +181,11 @@ export default function AddNginxModal() {
 			<div class="modal-action">
 				<form method="dialog" onSubmit={addNewNginx} >
 					<button class="btn" disabled={
-							!name().length ||
-							!(networkAddress()
-								? verifyIP(subnet(), networkAddress())
-								: true)
-						}>Add Instance</button>
+						!name().length ||
+						!(networkAddress()
+							? verifyIP(subnet(), networkAddress())
+							: true)
+					}>Add Instance</button>
 				</form>
 			</div>
 		</div>

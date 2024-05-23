@@ -54,8 +54,7 @@ export default function AddClientModal() {
 					onChange={(e: Event) => {
 						// @ts-ignore
 						let val = e?.target?.value;
-						val = val.trim();
-						val = val.replace(" ", "");
+						val = val.trim().replace(' ', '').replace('-', '');
 
 						setName(val);
 					}}

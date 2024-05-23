@@ -26,7 +26,6 @@ export default function AddRouterModal() {
 		const elem = document.getElementById("routerNetworkAddress");
 
 		if (networkName() === "") {
-			console.log("nothing");
 			elem?.classList.add("hidden");
 			elem?.classList.remove("flex");
 			setNetworkAddress("");
@@ -48,8 +47,7 @@ export default function AddRouterModal() {
 					onChange={(e: Event) => {
 						// @ts-ignore
 						let val = e?.target?.value;
-						val = val.trim();
-						val = val.replace(" ", "");
+						val = val.trim().replace(' ', '').replace('-', '');
 
 						if (val) setName(val);
 					}}

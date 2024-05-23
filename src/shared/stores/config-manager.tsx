@@ -16,7 +16,7 @@ export type InstanceData = {
 	empty: boolean;
 	name: string;
 	type: string;
-	data: unknown;
+	data: { replicas: number } | unknown;
 	stats: DockerStats[];
 };
 
@@ -26,11 +26,19 @@ export type GraphData = {
 	type: string;
 }
 
+export type GraphConnection = {
+	source: string,
+	target: string,
+}
+
 export const InstanceTypes = ["NodeApp", "Client", "Nginx", "Router"];
 
 const emptyGraphDataList: GraphData[] = [];
 
+const emptyGraphConnectionsList: GraphConnection[] = [];
+
 const emptyInstanceList: InstanceData[] = [];
+
 const emptyInstance: InstanceData = {
 	empty: true,
 	name: "",
@@ -45,6 +53,7 @@ function createConfigManager() {
 	const [instances, setInstances] = createSignal(emptyInstanceList);
 	const [selectedInstance, setSelectedInstance] = createSignal(emptyInstance);
 	const [graphData, setGraphData] = createSignal(emptyGraphDataList);
+	const [graphConnections, setGraphConnections] = createSignal(emptyGraphConnectionsList);
 	const [graphDataChanged, setGraphDataChanged] = createSignal(false);
 
 	let instancesUpdateNum = 0;
@@ -113,7 +122,22 @@ function createConfigManager() {
 			}
 		);
 
-		setInstancesWrapper(instances_parsed);
+		let instances_replicated: InstanceData[] = []
+
+		instances_parsed.map((inst) => {
+			if (inst.type == "NodeApp" || inst.type == "Client") {
+				for (let i = 1; i <= inst.data.replicas; i++) {
+					let new_inst = { ...inst };
+					new_inst.name = "comnetkingdev-" + new_inst.name + "-" + i;
+					instances_replicated.push(new_inst)
+				}
+			} else {
+				inst.name = "comnetkingdev-" + inst.name;
+				instances_replicated.push(inst);
+			}
+		})
+
+		setInstancesWrapper(instances_replicated);
 	};
 
 	const setInstancesWrapper = (insts: InstanceData[]) => {
@@ -122,18 +146,10 @@ function createConfigManager() {
 		const newGraphData: GraphData[] = [];
 		for (let i = 0; i < instances().length; i++) {
 			let instance = instances()[i];
-			if (instance.data?.replicas) {
-				for (let j = 1; j <= instance.data?.replicas; j++) {
-					newGraphData.push({ id: instance.name + "-" + j, label: instance.name, type: instance.type })
-				}
-			} else {
-				newGraphData.push({ id: instance.name, label: instance.name, type: instance.type })
-			}
+			newGraphData.push({ id: instance.name, label: instance.name, type: instance.type })
 		}
 		setGraphData(newGraphData);
 		setGraphDataChanged(true);
-
-		console.log("graphDataSet", newGraphData)
 	};
 
 	const getInstancesList = (): InstanceData[] => {
@@ -142,24 +158,14 @@ function createConfigManager() {
 
 	const selectInstance = async (instance: string) => {
 		setSelectedInstance(emptyInstance);
-		await invoke("get_instances", { configName: configName() })
-			.then((res: any) => {
-				for (let i = 0; i < res.length; i++) {
-					if (res[i][0] === instance) {
-						setSelectedInstance({
-							name: res[i][0],
-							type: Object.keys(res[i][1])[0],
-							data: Object.values(res[i][1])[0],
-							empty: false,
-							stats: [],
-						});
-						break;
-					}
-				}
-			})
-			.catch((_) => {
-				setSelectedInstance(emptyInstance);
-			});
+
+		for (let i = 0; i < instances().length; i++) {
+			let inst = instances()[i];
+			if (inst.name == instance) {
+				setSelectedInstance(inst)
+				break
+			}
+		}
 	};
 	const unselectInstance = () => setSelectedInstance(emptyInstance);
 
@@ -393,10 +399,11 @@ function createConfigManager() {
 			});
 	};
 
-	const getGraphData = (): { data: GraphData[], changed: boolean } => {
+	const getGraphData = (): { data: GraphData[], connections: GraphConnection[], changed: boolean } => {
+		fetchGraphConnections();
 		const changed = graphDataChanged();
 		setGraphDataChanged(false);
-		return { data: graphData(), changed };
+		return { data: graphData(), connections: graphConnections(), changed };
 	}
 
 	const stopSelectedConfig = async () => {
@@ -408,6 +415,28 @@ function createConfigManager() {
 				toast.error(error);
 			});
 	};
+
+	const fetchGraphConnections = async () => {
+		let connects: string[][] = await invoke("get_container_connections", {});
+		let connects_parsed: GraphConnection[] = [];
+
+		for (let i = 0; i < connects.length; i++) {
+			connects_parsed.push({ source: connects[i][0], target: connects[i][1] });
+		}
+
+
+		// @ts-ignore
+		const pairs = graphConnections().map((val) => val.source.id + "|-|" + val.target.id);
+		const changed = connects_parsed.length != pairs.length || !connects_parsed.reduce((acc, val) => {
+			const exists = pairs.reduce((acc_in, val_in) => acc_in || val_in == (val.source + "|-|" + val.target), false);
+			return acc && exists;
+		}, true);
+
+		if (changed) {
+			setGraphDataChanged(true);
+			setGraphConnections(connects_parsed);
+		}
+	}
 
 	return {
 		getConfigsList,

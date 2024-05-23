@@ -4,6 +4,7 @@ use crate::{
     instances::Instance,
     utils::copy_dir_all,
 };
+use core::str;
 use std::{
     collections::{HashMap, VecDeque},
     fs::{self, OpenOptions}, io::Write, str::FromStr,
@@ -16,6 +17,7 @@ pub struct ConfigManager {
     pub selected_config: Option<String>,
     pub configs: HashMap<String, ComposeConfig>,
     pub stats_recorded: HashMap<String, VecDeque<DockerStats>>,
+    pub connections: Vec<(String, String)>,
 }
 
 const STATS_CAPACITY: usize = 50;
@@ -26,6 +28,7 @@ impl ConfigManager {
             selected_config: None,
             configs: HashMap::new(),
             stats_recorded: HashMap::new(),
+            connections: Vec::new(),
         };
 
         // create folder for the images
@@ -355,7 +358,7 @@ impl ConfigManager {
 
         return match config.down(app_handle) {
             Ok(_) => {
-                self.selected_config = Some(config_name);
+                self.selected_config = None;
                 Ok(())
             }
             Err(err) => Err(err),
@@ -368,24 +371,23 @@ impl ConfigManager {
     ) -> Result<Vec<VecDeque<DockerStats>>, String> {
         let mut res: Vec<VecDeque<DockerStats>> = Vec::new();
 
-        for stat_key in self.stats_recorded.keys() {
-            if stat_key.contains(&instance_name) {
-                let docker_stats: Option<&VecDeque<DockerStats>> =
-                    self.stats_recorded.get(stat_key);
-                if docker_stats.is_some() {
-                    let mut to_push: VecDeque<DockerStats> = VecDeque::new();
-                    for stat in docker_stats.unwrap() {
-                        to_push.push_back(stat.clone());
-                    }
-                    res.push(to_push);
-                }
+        let docker_stats: Option<&VecDeque<DockerStats>> = self.stats_recorded.get(&instance_name);
+        if docker_stats.is_some() {
+            let mut to_push: VecDeque<DockerStats> = VecDeque::new();
+            for stat in docker_stats.unwrap() {
+                to_push.push_back(stat.clone());
             }
+            res.push(to_push);
         }
 
         Ok(res)
     }
 
     pub fn add_new_docker_stats(&mut self, stats: DockerStats) {
+        if self.selected_config.is_none() {
+            return;
+        }
+
         match self.stats_recorded.get_mut(&stats.name) {
             Some(deque) => {
                 if deque.len() == STATS_CAPACITY {
@@ -403,6 +405,14 @@ impl ConfigManager {
                     .push_front(stats);
             }
         }
+    }
+
+    pub fn get_container_connections(&self) -> Vec<(String, String)> {
+        return self.connections.clone()
+    }
+
+    pub fn set_container_connections(&mut self, connections: Vec<(String, String)>) {
+        self.connections = connections;
     }
 
     pub fn get_existing_networks(

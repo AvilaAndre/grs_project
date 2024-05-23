@@ -15,7 +15,7 @@ use std::collections::VecDeque;
 use config::network_data::NetworkData;
 use config::ComposeConfig;
 use docker::dockerstats::DockerStats;
-use docker::watcher::watch_containers;
+use docker::watcher::{watch_containers_connections, watch_containers_stats};
 use instances::nginx::NginxInstance;
 use instances::router::RouterInstance;
 use instances::types::NetworkData as NetworkInfo;
@@ -76,7 +76,6 @@ fn add_nodeapp_instance_to_config(
                 network_address,
                 network_name,
                 replicas: if replicas <= 1 { 1 } else { replicas },
-                container: None,
             }),
             &app_handle,
         )
@@ -100,7 +99,6 @@ fn add_client_instance_to_config(
                 network_address,
                 network_name,
                 replicas: if replicas <= 1 { 1 } else { replicas },
-                container: None,
             }),
             &app_handle,
         )
@@ -131,7 +129,6 @@ fn add_nginx_instance_to_config(
                 memory_limit,
                 cpus_limit,
                 memory_reservations,
-                container: None,
             }),
             &app_handle,
         )
@@ -158,7 +155,6 @@ fn add_router_instance_to_config(
             instance_name,
             Instance::Router(RouterInstance {
                 networks: vec![net_data],
-                container: None,
             }),
             &app_handle,
         )
@@ -240,6 +236,11 @@ async fn get_container_stats(
 }
 
 #[tauri::command]
+async fn get_container_connections(app_handle: AppHandle) -> Vec<(String, String)> {
+    app_handle.manager(|man| man.get_container_connections())
+}
+
+#[tauri::command]
 async fn get_existing_networks(
     config_name: String,
     app_handle: AppHandle,
@@ -265,6 +266,7 @@ fn main() {
             start_config_docker,
             stop_config_docker,
             get_container_stats,
+            get_container_connections,
             get_existing_networks,
 			add_entry_to_dns_bind,
         ])
@@ -276,7 +278,10 @@ fn main() {
                 .expect("ConfigManager initialize should succeed");
             *app_state.manager.lock().unwrap() = Some(manager);
 
-            std::thread::spawn(|| watch_containers(handle));
+            let handle2 = app.app_handle();
+
+            std::thread::spawn(|| watch_containers_stats(handle));
+            std::thread::spawn(|| watch_containers_connections(handle2));
 
             Ok(())
         })
