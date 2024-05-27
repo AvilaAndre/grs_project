@@ -7,9 +7,11 @@ use crate::{
 use core::str;
 use std::{
     collections::{HashMap, VecDeque},
-    fs,
+    fs::{self, OpenOptions}, io::Write, str::FromStr,
 };
 use tauri::AppHandle;
+
+use ipnetwork::IpNetwork;
 
 pub struct ConfigManager {
     pub selected_config: Option<String>,
@@ -53,8 +55,6 @@ impl ConfigManager {
             .expect("The app data directory should exist.");
 
         fs::create_dir_all(&app_dir).expect("The app data directory should be created.");
-
-        println!("path {:?}", app_dir);
 
         // Search for configs
         let mut configs: HashMap<String, ComposeConfig> = HashMap::new();
@@ -214,6 +214,24 @@ impl ConfigManager {
         {
             return Err(format!("Network with name {} already exists.", network_name).to_string());
         }
+
+		let new_subnet = match IpNetwork::from_str(&network.subnet) {
+            Ok(subnet) => subnet,
+            Err(_) => return Err(format!("Invalid subnet format: {}", network.subnet)),
+        };
+
+        // Check if the subnet is contained within any existing subnet
+        for existing_network in config.networks.as_ref().unwrap().values() {
+            let existing_subnet = match IpNetwork::from_str(&existing_network.subnet) {
+                Ok(subnet) => subnet,
+                Err(_) => return Err(format!("Invalid subnet format in existing network: {}", existing_network.subnet)),
+            };
+
+            if existing_subnet.contains(new_subnet.ip()) || new_subnet.contains(existing_subnet.ip()) {
+                return Err(format!("Subnet {} is contained within or contains existing subnet ({}).", network.subnet, existing_network.subnet));
+            }
+        }
+
         config
             .networks
             .as_mut()
@@ -410,6 +428,33 @@ impl ConfigManager {
             final_map = config.networks.as_ref().unwrap().clone();
         }
 
+		// Exclude the DNS network from the list that goes to user
+		final_map.remove(&(config_name.to_string() + "_dns_net"));
+
         Ok(final_map)
     }
+
+
+	pub fn add_entry_to_dns_bind(&mut self, config_name: String, dns_name: String, ip_address: String, app_handle: &AppHandle) -> Result<bool, String>{
+		
+		let app_dir = app_handle
+            .path_resolver()
+            .app_data_dir()
+            .expect("The app data directory should exist.");
+
+		let filepath = app_dir.to_string_lossy().into_owned()+"/";
+
+		let filename = "dns.".to_owned()+&config_name+".net";
+
+		let item = format!("{dns_name} IN A {ip_address}\n", ip_address=ip_address, dns_name=dns_name);
+
+		let mut data_file = OpenOptions::new()
+        .append(true)
+        .open(filepath.to_owned()+&filename)
+        .expect(&("Cannot open file ".to_owned()+&filepath+&filename));
+
+		let _ = data_file.write(item.as_bytes());
+
+		Ok(true) 
+	}
 }

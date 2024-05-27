@@ -35,7 +35,18 @@ fn greet(name: &str) -> String {
 fn create_compose_config(name: &str, app_handle: AppHandle) -> Result<Vec<String>, &'static str> {
     match ComposeConfig::new(name.to_string(), &app_handle) {
         Ok(new_config) => {
-            app_handle.manager_mut(|man| man.configs.insert(name.to_string(), new_config));
+			app_handle.manager_mut(|man| man.configs.insert(name.to_string(), new_config));
+			
+
+			let _ = app_handle.manager_mut(|man| {
+				man.add_network_to_config(
+					name.to_string(),
+					name.to_string()+"_dns_net",
+					NetworkData { subnet: "192.168.0.0/29".to_string(), gateway: "192.168.0.1".to_string(), dns_endpoint: Some("192.168.0.3".to_string())},
+					&app_handle,
+				)
+			});
+			
             return Ok(app_handle.manager(|man| man.get_configs_list()));
         }
         Err(why) => return Err(why),
@@ -156,17 +167,45 @@ fn add_network_to_config(
     network_name: String,
     subnet: String,
     gateway: String,
+	dns_endpoint: String,
     app_handle: AppHandle,
 ) -> Result<bool, String> {
     app_handle.manager_mut(|man| {
+
+		let dns_end;
+		if dns_endpoint != "" {
+			dns_end = Some(dns_endpoint.clone());
+		} else {
+			dns_end = None;
+		}
+
         man.add_network_to_config(
             config_name,
             network_name,
-            NetworkData { subnet, gateway },
+            NetworkData { subnet, gateway, dns_endpoint: dns_end },
             &app_handle,
         )
     })
 }
+
+// TODO javascript disto
+// TODO function "add_entry_to_dns". argumentos -> IP + name que queremos que fique (igual ao container se nao for especificado).
+// perguntar ao user aquando a criação de uma instancia se quer adicionar ao DNS, só quando o IP esta corretamente preenchido.
+// escreve no .local/share/com.netking.dev/dns.conf-name.net se checkbox for preenchida
+// dns.{conf-name}.net + {conf-name}.conf.local
+// criar NETWORK só do DNS, chamar 'add_network_to_config' após criação da config, associar logo o DNS 192.168.0.0/30 , IP 192.168.0.2. feito em src-tauri/src/main.rs line 40
+#[tauri::command]
+fn add_entry_to_dns_bind(config_name: String, dns_name: String, ip_address: String, app_handle: AppHandle) -> Result<bool, String>{
+	app_handle.manager_mut(|man| {
+        man.add_entry_to_dns_bind(
+            config_name,
+            dns_name,
+            ip_address,
+			&app_handle
+        )
+    })
+}
+
 
 #[tauri::command]
 fn get_instances(
@@ -227,6 +266,7 @@ fn main() {
             get_container_stats,
             get_container_connections,
             get_existing_networks,
+			add_entry_to_dns_bind,
         ])
         .setup(|app| {
             let handle = app.handle();

@@ -309,13 +309,15 @@ function createConfigManager() {
 	const addNewNetworkToConfig = async (
 		networkName: string,
 		subnet: string,
-		gateway: string
+		gateway: string,
+		dnsEndpoint: string,
 	): Promise<boolean> => {
 		let result = await invoke("add_network_to_config", {
 			configName: configName(),
 			networkName,
 			subnet,
 			gateway,
+			dnsEndpoint
 		})
 			.then((add) => {
 				if (!add)
@@ -356,9 +358,24 @@ function createConfigManager() {
 
 			return result;
 		} catch (err) {
-			console.error("Stats fetch failed:", err);
+			console.log("Networks fetch failed:", err);
 		}
 	};
+
+
+	const addEntryToDnsBind = async (dnsName: string, ipAddress: string) => {
+		try {
+			let result: any[] = await invoke("add_entry_to_dns_bind", {
+				configName: configName(),
+				dnsName: dnsName,
+				ipAddress: ipAddress
+			});
+
+			return result;
+		} catch (err) {
+			console.log("DNS addition failed:", err);
+		}
+	}
 
 	const setExistingNetworksMap = async (setExistingNetworks: any) => {
 		try {
@@ -441,6 +458,7 @@ function createConfigManager() {
 		startSelectedConfig,
 		stopSelectedConfig,
 		getGraphData,
+		addEntryToDnsBind,
 	};
 }
 

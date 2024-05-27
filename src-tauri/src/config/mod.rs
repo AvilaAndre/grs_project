@@ -1,5 +1,6 @@
 pub mod docker;
 pub mod network_data;
+pub mod dns;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -42,7 +43,7 @@ impl ComposeConfig {
         let _file = fs::File::create(app_dir.join(name.clone() + ".toml"));
 
         let instance = Self {
-            name,
+            name: name.clone(),
             node_apps: None,
             clients: None,
             nginxs: None,
@@ -51,6 +52,8 @@ impl ComposeConfig {
         };
 
         let _ = instance.write(app_handle);
+
+		let _ = dns::write_dns_files(app_dir.to_string_lossy().into_owned(), name);
 
         Ok(instance)
     }
@@ -111,7 +114,7 @@ impl ComposeConfig {
             Err(_) => return Err("Couldn't create file to write"),
         };
 
-        let _ = docker::write_docker_compose(&dock_file, self);
+        let _ = docker::write_docker_compose(&dock_file, self, app_dir.to_string_lossy().into_owned());
 
         // ---------------------------------------------------
 
