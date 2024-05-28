@@ -33,7 +33,7 @@ export default function ActionsPage(props: any) {
 			<div class="flex flex-row w-screen">
 				<section class="w-full">
 					<div class="relative w-full h-fit grid grid-cols-3 p-2 z-10">
-						<A href={"/configs"} class="btn btn-neutral btn-circle">
+						<A href={"/"} class="btn btn-neutral btn-circle">
 							<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed"><path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z" />
 							</svg>
 						</A>

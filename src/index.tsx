@@ -4,7 +4,6 @@ import { render } from "solid-js/web";
 import "./index.css";
 import { Route, Router } from "@solidjs/router";
 import ConfigsPage from "./pages/ConfigsPage";
-import HomePage from "./pages/HomePage";
 import ActionsPage from "./pages/ActionsPage";
 import { Toaster } from "solid-toast";
 
@@ -20,8 +19,7 @@ const App = (props: any) => (
 
 render(() => (
 	<Router root={App}>
-		<Route path="/" component={HomePage} />
-		<Route path="/configs" component={ConfigsPage} />
+		<Route path="/" component={ConfigsPage} />
 		<Route path="/actions/:id" component={ActionsPage} />
 	</Router>
 ), document.getElementById("root") as HTMLElement);
