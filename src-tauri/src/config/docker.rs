@@ -277,7 +277,7 @@ pub fn write_router_instance(
 
 
 /**
- * Writes the DNS instance. Fixed IP of 192.168.0.2 in network 192.168.0.0/30.
+ * Writes the DNS instance. Fixed IP of 192.168.1.2 in network 192.168.1.0/30.
  */
 pub fn write_dns_conf(conf_name: &String, mut file: &File, filepath: String, indentation: usize) -> io::Result<()> {
 
@@ -287,7 +287,7 @@ pub fn write_dns_conf(conf_name: &String, mut file: &File, filepath: String, ind
 	let network_name = container_name.clone() + "_net";
 
 	let item = format!(
-		"{indent}{container_name}:\n{indent}  image: internetsystemsconsortium/bind9:9.16\n{indent}  container_name: {container_name}\n{indent}  volumes:\n{indent}    - {path}/dns.{conf_name}.net:/etc/bind/dns.{conf_name}.net\n{indent}    - {path}/{conf_name}.conf.local:/etc/bind/{conf_name}.conf.local\n{indent}    - /var/cache/bind\n{indent}    - /var/lib/bind\n{indent}  networks:\n{indent}    {network_name}:\n{indent}      ipv4_address: 192.168.0.2\n{indent}  cap_add:\n{indent}    - NET_ADMIN\n",
+		"{indent}{container_name}:\n{indent}  image: internetsystemsconsortium/bind9:9.16\n{indent}  container_name: {container_name}\n{indent}  volumes:\n{indent}    - {path}/dns.{conf_name}.net:/etc/bind/dns.{conf_name}.net\n{indent}    - {path}/{conf_name}.conf.local:/etc/bind/{conf_name}.conf.local\n{indent}    - /var/cache/bind\n{indent}    - /var/lib/bind\n{indent}  networks:\n{indent}    {network_name}:\n{indent}      ipv4_address: 192.168.1.2\n{indent}  cap_add:\n{indent}    - NET_ADMIN\n",
 		indent=" ".repeat(indentation),
 		container_name = container_name,
 		network_name = network_name,
