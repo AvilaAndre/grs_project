@@ -132,11 +132,13 @@ export default function InstanceMap() {
 		const links = graphConnections;
 
 		simulation.stop();
-		simulation = d3.forceSimulation(nodes)
-			.force("link", d3.forceLink(links).id(d => d.id))
-			.force("charge", d3.forceManyBody().strength(-120))
-			.force("x", d3.forceX(pivot.attr("cx")))
-			.force("y", d3.forceY(pivot.attr("cy")));
+		try {
+			simulation = d3.forceSimulation(nodes)
+				.force("link", d3.forceLink(links).id(d => d.id))
+				.force("charge", d3.forceManyBody().strength(-120))
+				.force("x", d3.forceX(pivot.attr("cx")))
+				.force("y", d3.forceY(pivot.attr("cy")));
+		} catch (_e) { }
 
 		updateNodes(nodes);
 		updateLinks(links)

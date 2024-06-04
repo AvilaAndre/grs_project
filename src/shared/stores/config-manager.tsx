@@ -421,7 +421,8 @@ function createConfigManager() {
 		let connects_parsed: GraphConnection[] = [];
 
 		for (let i = 0; i < connects.length; i++) {
-			connects_parsed.push({ source: connects[i][0], target: connects[i][1] });
+			if (connects[i][0] != "comnetkingdev-dns_networks_router-1" && connects[i][1] != "comnetkingdev-dns_networks_router-1")
+				connects_parsed.push({ source: connects[i][0], target: connects[i][1] });
 		}
 
 
